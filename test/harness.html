@@ -1,0 +1,15 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><script src="mock.js"></script>
+<style>body{margin:0;display:flex;gap:6px;background:#333} iframe{width:var(--w,390px);height:var(--h,780px);border:0;background:#000}</style></head>
+<body><div id="frames"></div><script>const qp=new URLSearchParams(location.search); if(qp.get('w')) document.body.style.setProperty('--w', qp.get('w')+'px'); if(qp.get('h')) document.body.style.setProperty('--h', qp.get('h')+'px');</script>
+<script>
+const SRC = location.search.includes('src=') ? new URLSearchParams(location.search).get('src') : '../index.html';
+const names = (new URLSearchParams(location.search).get('names') || 'A,B,C').split(',');
+fetch(SRC).then(r=>r.text()).then(html => {
+  names.forEach((n,k) => {
+    const f = document.createElement('iframe'); f.id = 'f'+k;
+    const inj = `<script>(function(){function mem(){const m=new Map();return{getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k),clear:()=>m.clear()};}try{Object.defineProperty(window,'localStorage',{value:mem(),configurable:true});Object.defineProperty(window,'sessionStorage',{value:mem(),configurable:true});}catch(e){console.error('storage shim failed',e)}})();window.claude = parent.MOCK.make('u_${n}', '${n}친구');<\/script>`;
+    f.srcdoc = html.replace('<head>', '<head>' + inj);
+    document.getElementById('frames').append(f);
+  });
+});
+</script></body></html>

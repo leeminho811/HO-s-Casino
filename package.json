@@ -1,0 +1,15 @@
+{
+  "name": "hos-casino",
+  "private": true,
+  "description": "HO’s Casino — 친구들과 하는 온라인 텍사스 홀덤 (Firebase + GitHub Pages)",
+  "scripts": {
+    "build": "python3 build.py",
+    "test": "node test/engine.test.js",
+    "test:e2e": "firebase emulators:exec --only auth,database --project demo-hos \"node test/e2e-firebase.mjs\""
+  },
+  "devDependencies": {
+    "firebase": "12.19.0",
+    "firebase-tools": "15.35.0",
+    "playwright": "1.63.0"
+  }
+}

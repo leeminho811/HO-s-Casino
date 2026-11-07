@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HO’s Casino</title>
+<meta name="description" content="친구들과 링크 하나로 함께하는 텍사스 홀덤. 로그인 없이 바로 입장.">
+<meta property="og:title" content="HO’s Casino">
+<meta property="og:description" content="친구들과 링크 하나로 함께하는 텍사스 홀덤. 로그인 없이 바로 입장.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0a100e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HO’s Casino">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a100e'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle' fill='%23dcb05a'%3E%E2%99%A0%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Playfair+Display:wght@700;800&family=Song+Myung&display=swap" rel="stylesheet">
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand"><span class="mark" aria-hidden="true">♠</span><b>HO’s Casino</b></div>
+    <div class="meta" id="meta"></div>
+    <div class="online" id="online" hidden title="지금 접속 중"><i></i><span id="onlineN">0</span>명</div>
+    <button class="icon-btn" id="menuBtn" aria-label="테이블 메뉴">☰</button>
+  </header>
+  <div class="banner" id="banner" hidden><span id="bannerText"></span><button id="bannerBtn" hidden></button></div>
+  <main id="tableWrap">
+    <div id="table">
+      <div class="felt" id="felt"></div>
+      <div class="center" id="center">
+        <div class="pot" id="pot"></div>
+        <div class="board" id="board"></div>
+        <div class="status" id="status" aria-live="polite"></div>
+      </div>
+      <div id="bets"></div>
+      <div id="seats"></div>
+    </div>
+  </main>
+  <section class="dock" id="dock"></section>
+</div>
+<div class="backdrop" id="sheetBack" hidden><div class="sheet" id="sheet" role="dialog" aria-label="테이블 메뉴"></div></div>
+<div class="backdrop center-modal" id="modalBack" hidden><div class="modal" id="modal" role="dialog"></div></div>
+<div class="toast" id="toast" hidden role="status"></div>
+<!-- Firebase 설정값: 이 파일만 고치면 돼요 (README 참고) -->
+<script src="firebase-config.js"></script>
+<script>
+/*ENGINE*/
+</script>
+<script>
+/*BACKEND*/
+</script>
+<script>
+/*APP*/
+</script>
+</body>
+</html>
