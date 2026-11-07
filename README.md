@@ -53,7 +53,7 @@ window.FIREBASE_CONFIG = {
 
 ### 6단계 — GitHub Pages로 사이트 공개
 1. 저장소 **Settings → Pages**
-2. **Source: Deploy from a branch** → Branch에서 이 코드가 있는 브랜치와 **/(root)** 선택 → **Save**.
+2. **Source: Deploy from a branch** → Branch에서 **main** 과 **/(root)** 선택 → **Save**.
 3. 1~2분 뒤 <https://leeminho811.github.io/HO-s-Casino/> 에서 열려요.
 
 ---
