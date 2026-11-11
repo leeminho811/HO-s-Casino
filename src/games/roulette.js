@@ -54,6 +54,12 @@
     ],
     init: () => ({ phase: 'bet', no: 0, deadline: 0, bets: {}, ready: {}, last: {}, result: null, wins: {}, hist: [] }),
     busy: (G, i) => G.phase === 'spin' && !!G.bets[i],
+    botNote: '봇도 같이 칩을 걸어요. 내가 칩을 올리면 봇도 따라 베팅해요.',
+    bot(a, i) {
+      const { rint } = a;
+      const outside = ['red', 'black', 'odd', 'even', 'low', 'high', 'd1', 'd2', 'd3', 'c1', 'c2', 'c3'];
+      return C.botBets(a, i, () => (rint(4) === 0 ? 'n' + rint(37) : outside[rint(outside.length)]), 3);
+    },
     onReq(a, i, r) {
       const { S, G } = a, st = S.seats[i];
       if (G.phase !== 'bet') return;

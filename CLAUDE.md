@@ -48,6 +48,10 @@ node_modules/firebase 의 같은 버전 파일로 바꿔 치기하므로 package
 - `v` (화면 쪽): `{S, G, me, seat, secret, stage, dock, send, el, fmt, cards, countdown, spot, chip, wait, ...}`.
 - 블랙잭·룰렛·바카라는 비밀이 없다 (카드는 필요할 때 무한 덱에서 뽑음) → 호스트가 바뀌어도 판이 그대로 이어짐.
   섯다는 `G.enc[seat]` 에 봉한 패를 두고, 호스트가 바뀌면 그 판은 무효(판돈 반환).
+- 봇: 자리 정보에 `bot: true`. 누구든 앉은 사람이 `addBot`/`kickBots` 요청. 호스트가 `game.bot(a,i)` 가 돌려주는 요청을
+  0.7~2.2초 뒤에 `onReq` 로 적용(kit.js driveBots). 봇은 칩이 0이면 자동 리바이, 접속 끊김으로 쫓겨나지 않음.
+  블랙잭·룰렛·바카라 봇은 사람이 그 판에 베팅해야 따라 베팅(봇끼리만 도는 판 없음). 섯다는 칩 있는 사람이 있어야 패를 돌림.
+  섯다 봇의 패는 공유 상태에 안 올림(호스트 ctx 에만).
 - CSS 클래스 이름이 app.css(홀덤)와 겹치지 않게 주의 (`.mine`, `.plate`, `.av` 등은 홀덤 것).
 
 ## 동기화 설계 (바꾸지 말 것)

@@ -50,6 +50,7 @@
   }
 
   const eligible = S => S.seats.map((s, i) => (s && s.stack > 0 ? i : -1)).filter(i => i >= 0);
+  const canDeal = S => eligible(S).length >= 2 && S.seats.some(s => s && !s.bot && s.stack > 0);
   const order = G => Object.keys(G.ps).map(Number).sort((x, y) => x - y);
   function nextToAct(G, from) {
     const o = order(G), n = o.length, at = o.indexOf(from);
@@ -120,7 +121,7 @@
       st.stack -= pay;
       G.ps[i] = { in: pay, folded: false, allin: st.stack === 0, acted: false, raises: 0 };
       ctx.hands[i] = [deck.pop(), deck.pop()];
-      G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
+      if (!st.bot) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
     }
     G.curBet = ANTE; G.phase = 'bet';
     a.log(`— 섯다 #${G.no} · 선 ${S.seats[G.button].name}`);
@@ -151,16 +152,32 @@
     ],
     init: () => ({ phase: 'idle', started: false, no: 0, hid: null, button: -1, ps: {}, cur: -1, curBet: 0, deadline: 0, nextAt: 0, enc: {}, shown: {}, res: null }),
     busy: (G, i) => G.phase === 'bet' && !!G.ps[i] && !G.ps[i].folded,
+    botNote: '혼자서도 봇과 섯다를 칠 수 있어요. 봇은 자기 패를 보고 다이·콜·하프를 정해요.',
+    bot(a, i) {
+      const { G, S, ctx, rint } = a;
+      if (G.phase !== 'bet' || G.cur !== i || !G.ps[i]) return null;
+      const p = G.ps[i], st = S.seats[i], need = Math.max(0, G.curBet - p.in), hid = G.hid;
+      const h = ctx.hands && ctx.hands[i];
+      if (!h) return { type: need ? 'die' : 'call', hid };
+      const sc = score(h[0], h[1]), s = sc.s;
+      const canHalf = p.raises < 2 && st.stack > need;
+      if (s >= 800) return { type: canHalf && rint(4) ? 'half' : 'call', hid };                 // 땡 이상
+      if (s >= 650) return { type: canHalf && p.raises === 0 && rint(5) < 2 ? 'half' : 'call', hid }; // 알리~세륙
+      if (sc.catcher || sc.inspector) return { type: 'call', hid };
+      if (s >= 606) return { type: need > st.stack / 2 && rint(2) ? 'die' : 'call', hid };          // 6끗 이상
+      if (!need) return { type: canHalf && rint(8) === 0 ? 'half' : 'call', hid };               // 가끔 블러프
+      return { type: rint(10) < 6 ? 'die' : 'call', hid };
+    },
     async onHost(a) {
       const { G, ctx } = a;
       if (G.phase !== 'bet') return;
       if (ctx.hid !== G.hid || !ctx.hands) return voidHand(a, '진행 기기가 바뀌었어요');
-      for (const i of order(G)) if (ctx.hands[i]) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
+      for (const i of order(G)) if (ctx.hands[i] && a.S.seats[i] && !a.S.seats[i].bot) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
     },
     async onKey(a, i) { const { G, ctx } = a; if (G.phase === 'bet' && ctx.hid === G.hid && ctx.hands[i]) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] }); },
     onReq(a, i, r) {
       const { S, G } = a;
-      if (r.type === 'start') { if (!G.started && eligible(S).length >= 2) { G.started = true; G.nextAt = a.now; a.log('섯다 시작'); } return; }
+      if (r.type === 'start') { if (!G.started && canDeal(S)) { G.started = true; G.nextAt = a.now; a.log('섯다 시작'); } return; }
       if (G.phase !== 'bet' || G.cur !== i || r.hid !== G.hid) return;
       if (['die', 'call', 'half'].includes(r.type)) act(a, i, r.type);
     },
@@ -177,7 +194,7 @@
         if (G.cur < 0 || !G.ps[G.cur] || !S.seats[G.cur]) return afterAct(a, G.cur);
         if (now > G.deadline) act(a, G.cur, G.ps[G.cur].in >= G.curBet ? 'call' : 'die');
       } else if (G.started && now >= (G.nextAt || 0)) {
-        if (eligible(S).length >= 2) await startHand(a);
+        if (canDeal(S)) await startHand(a);
         else if (G.phase === 'show') { G.phase = 'idle'; }
       }
     },
@@ -219,8 +236,8 @@
       else if (G.phase === 'show' && G.res) {
         const w = G.res.winners.map(x => (S.seats[x.seat] ? S.seats[x.seat].name : '?')).join(', ');
         msg.append(el('b', null, w), ' 승리' + (G.res.show && G.res.winners[0] && G.res.names[G.res.winners[0].seat] ? ' · ' + G.res.names[G.res.winners[0].seat] : ''));
-      } else if (!G.started) msg.textContent = eligible(S).length >= 2 ? '누구든 “게임 시작”을 누르면 패를 돌려요' : '2명 이상 앉으면 시작할 수 있어요';
-      else msg.textContent = eligible(S).length >= 2 ? '곧 다음 판을 돌려요' : '상대를 기다리는 중이에요';
+      } else if (!G.started) msg.textContent = canDeal(S) ? '누구든 “게임 시작”을 누르면 패를 돌려요' : '2명 이상 앉으면 시작할 수 있어요 (혼자면 봇 추가)';
+      else msg.textContent = canDeal(S) ? '곧 다음 판을 돌려요' : '상대를 기다리는 중이에요';
       felt.append(mid, msg, spots);
       stage.append(felt);
     },
@@ -243,10 +260,10 @@
         const half = el('button', 'btn raise', '하프'); half.disabled = p.raises >= 2 || seat.stack <= need; half.onclick = () => send('half', { hid: G.hid });
         row.append(die, call, half); dock.append(row);
       } else if (!G.started) {
-        const row = el('div', 'actions two');
-        const b = el('button', 'btn primary', '게임 시작'); const n = eligible(S).length;
-        b.disabled = n < 2; if (n < 2) b.append(el('small', null, '2명 이상 필요')); b.onclick = () => send('start');
-        row.append(b, v.inviteButton()); dock.append(row);
+        const row = el('div', 'actions three');
+        const b = el('button', 'btn primary', '게임 시작'), ready = canDeal(S);
+        b.disabled = !ready; if (!ready) b.append(el('small', null, '2명 이상 필요')); b.onclick = () => send('start');
+        row.append(b, v.botButton(), v.inviteButton()); dock.append(row);
       } else dock.append(v.wait(G.phase === 'bet' ? '다른 플레이어 차례예요' : '다음 판을 기다리는 중'));
     },
   };

@@ -64,6 +64,18 @@
     ],
     init: () => ({ phase: 'bet', no: 0, deadline: 0, stepAt: 0, bets: {}, ready: {}, hands: {}, dealer: [], cur: -1, last: {} }),
     busy: (G, i) => (G.phase === 'play' || G.phase === 'dealer') && !!G.hands[i],
+    botNote: '봇도 각자 딜러와 대결해요. 내가 칩을 올리면 봇도 같이 베팅해요.',
+    // simple basic strategy
+    bot(a, i) {
+      const { G, S } = a;
+      if (G.phase === 'bet') return C.botBets(a, i, () => 'x', 1);
+      if (G.phase !== 'play' || G.cur !== i || !G.hands[i]) return null;
+      const h = G.hands[i], { v, soft } = handVal(h.cards), up = val(G.dealer[0] || 'T');
+      if (h.cards.length === 2 && !soft && (v === 11 || (v === 10 && up < 10)) && S.seats[i].stack >= h.bet) return { type: 'double' };
+      if (soft) return { type: v >= 19 || (v === 18 && up <= 8) ? 'stand' : 'hit' };
+      if (v >= 17 || (v >= 13 && up <= 6) || (v === 12 && up >= 4 && up <= 6)) return { type: 'stand' };
+      return { type: 'hit' };
+    },
     onReq(a, i, r) {
       const { S, G, rint } = a, st = S.seats[i];
       if (G.phase === 'bet') {

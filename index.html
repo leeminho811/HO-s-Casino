@@ -384,6 +384,9 @@ body { word-break: keep-all; overflow-wrap: anywhere; }
 .gchip i::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--c1, #c8983f); }
 .gmine { display: flex; align-items: baseline; gap: 7px; font-size: 13px; color: var(--muted); padding: 0 2px 8px; }
 .gmine b:first-child { color: var(--text); font-size: 15px; margin-right: auto; }
+.botpill { margin-left: 4px; align-self: center; border: 1px dashed rgba(220, 176, 90, 0.55); background: transparent; color: var(--brass); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.botpill:active { transform: scale(0.96); }
+.gplate.bot .gname { color: #c9d1cd; }
 .gintro { color: var(--muted); font-size: 13px; line-height: 1.55; padding: 0 2px 10px; }
 .chips { display: flex; justify-content: center; gap: 12px; padding: 2px 0 10px; }
 .chipbtn { width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: pointer; position: relative; font-weight: 800; font-size: 14px; color: #fff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
@@ -2563,6 +2566,17 @@ window.startHoldem = function (ROOM_ARG) {
     draw: rint => RANKS[rint(13)] + SUITS[rint(4)],
     seated: S => S.seats.map((s, i) => (s ? i : -1)).filter(i => i >= 0),
     sum: o => Object.values(o || {}).reduce((a, b) => a + b, 0),
+    // bots in house games only bet once a person has put chips down this round (no bot-only rounds)
+    humanBet: (S, G) => Object.keys(G.bets).some(k => S.seats[k] && !S.seats[k].bot),
+    botChip(rint, stack) { const opts = [10, 10, 10, 50, 50, 100].filter(x => x <= stack); return opts.length ? opts[rint(opts.length)] : 0; },
+    // bet → (maybe one more bet) → ready
+    botBets(a, i, pickKey, maxBets) {
+      const { S, G, rint } = a, st = S.seats[i];
+      if (G.phase !== 'bet' || G.ready[i] || !C.humanBet(S, G)) return null;
+      const mine = G.bets[i], n = mine ? (typeof mine === 'object' ? Object.keys(mine).length : 1) : 0;
+      if (!n || (n < maxBets && rint(3) === 0)) { const add = C.botChip(rint, st.stack); if (add) return { type: 'bet', k: pickKey(), add }; }
+      return mine ? { type: 'ready' } : null;
+    },
     // Betting window for house games: opens a 20s countdown at the first bet; starts early once
     // everyone who can bet has bet and pressed "done".
     shouldStart(S, G, now, hasBet) {
@@ -2643,6 +2657,18 @@ window.startHoldem = function (ROOM_ARG) {
     ],
     init: () => ({ phase: 'bet', no: 0, deadline: 0, stepAt: 0, bets: {}, ready: {}, hands: {}, dealer: [], cur: -1, last: {} }),
     busy: (G, i) => (G.phase === 'play' || G.phase === 'dealer') && !!G.hands[i],
+    botNote: '봇도 각자 딜러와 대결해요. 내가 칩을 올리면 봇도 같이 베팅해요.',
+    // simple basic strategy
+    bot(a, i) {
+      const { G, S } = a;
+      if (G.phase === 'bet') return C.botBets(a, i, () => 'x', 1);
+      if (G.phase !== 'play' || G.cur !== i || !G.hands[i]) return null;
+      const h = G.hands[i], { v, soft } = handVal(h.cards), up = val(G.dealer[0] || 'T');
+      if (h.cards.length === 2 && !soft && (v === 11 || (v === 10 && up < 10)) && S.seats[i].stack >= h.bet) return { type: 'double' };
+      if (soft) return { type: v >= 19 || (v === 18 && up <= 8) ? 'stand' : 'hit' };
+      if (v >= 17 || (v >= 13 && up <= 6) || (v === 12 && up >= 4 && up <= 6)) return { type: 'stand' };
+      return { type: 'hit' };
+    },
     onReq(a, i, r) {
       const { S, G, rint } = a, st = S.seats[i];
       if (G.phase === 'bet') {
@@ -2807,6 +2833,12 @@ window.startHoldem = function (ROOM_ARG) {
     ],
     init: () => ({ phase: 'bet', no: 0, deadline: 0, bets: {}, ready: {}, last: {}, result: null, wins: {}, hist: [] }),
     busy: (G, i) => G.phase === 'spin' && !!G.bets[i],
+    botNote: '봇도 같이 칩을 걸어요. 내가 칩을 올리면 봇도 따라 베팅해요.',
+    bot(a, i) {
+      const { rint } = a;
+      const outside = ['red', 'black', 'odd', 'even', 'low', 'high', 'd1', 'd2', 'd3', 'c1', 'c2', 'c3'];
+      return C.botBets(a, i, () => (rint(4) === 0 ? 'n' + rint(37) : outside[rint(outside.length)]), 3);
+    },
     onReq(a, i, r) {
       const { S, G } = a, st = S.seats[i];
       if (G.phase !== 'bet') return;
@@ -2971,6 +3003,8 @@ window.startHoldem = function (ROOM_ARG) {
     ],
     init: () => ({ phase: 'bet', no: 0, deadline: 0, stepAt: 0, bets: {}, ready: {}, last: {}, P: [], B: [], win: null, wins: {}, hist: [] }),
     busy: (G, i) => G.phase === 'deal' && !!G.bets[i],
+    botNote: '봇도 플레이어/뱅커에 걸어요. 내가 칩을 올리면 봇도 따라 베팅해요.',
+    bot: (a, i) => C.botBets(a, i, () => (a.rint(12) === 0 ? 't' : a.rint(2) ? 'b' : 'p'), 1),
     onReq(a, i, r) {
       const { S, G } = a, st = S.seats[i];
       if (G.phase !== 'bet') return;
@@ -3121,6 +3155,7 @@ window.startHoldem = function (ROOM_ARG) {
   }
 
   const eligible = S => S.seats.map((s, i) => (s && s.stack > 0 ? i : -1)).filter(i => i >= 0);
+  const canDeal = S => eligible(S).length >= 2 && S.seats.some(s => s && !s.bot && s.stack > 0);
   const order = G => Object.keys(G.ps).map(Number).sort((x, y) => x - y);
   function nextToAct(G, from) {
     const o = order(G), n = o.length, at = o.indexOf(from);
@@ -3191,7 +3226,7 @@ window.startHoldem = function (ROOM_ARG) {
       st.stack -= pay;
       G.ps[i] = { in: pay, folded: false, allin: st.stack === 0, acted: false, raises: 0 };
       ctx.hands[i] = [deck.pop(), deck.pop()];
-      G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
+      if (!st.bot) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
     }
     G.curBet = ANTE; G.phase = 'bet';
     a.log(`— 섯다 #${G.no} · 선 ${S.seats[G.button].name}`);
@@ -3222,16 +3257,32 @@ window.startHoldem = function (ROOM_ARG) {
     ],
     init: () => ({ phase: 'idle', started: false, no: 0, hid: null, button: -1, ps: {}, cur: -1, curBet: 0, deadline: 0, nextAt: 0, enc: {}, shown: {}, res: null }),
     busy: (G, i) => G.phase === 'bet' && !!G.ps[i] && !G.ps[i].folded,
+    botNote: '혼자서도 봇과 섯다를 칠 수 있어요. 봇은 자기 패를 보고 다이·콜·하프를 정해요.',
+    bot(a, i) {
+      const { G, S, ctx, rint } = a;
+      if (G.phase !== 'bet' || G.cur !== i || !G.ps[i]) return null;
+      const p = G.ps[i], st = S.seats[i], need = Math.max(0, G.curBet - p.in), hid = G.hid;
+      const h = ctx.hands && ctx.hands[i];
+      if (!h) return { type: need ? 'die' : 'call', hid };
+      const sc = score(h[0], h[1]), s = sc.s;
+      const canHalf = p.raises < 2 && st.stack > need;
+      if (s >= 800) return { type: canHalf && rint(4) ? 'half' : 'call', hid };                 // 땡 이상
+      if (s >= 650) return { type: canHalf && p.raises === 0 && rint(5) < 2 ? 'half' : 'call', hid }; // 알리~세륙
+      if (sc.catcher || sc.inspector) return { type: 'call', hid };
+      if (s >= 606) return { type: need > st.stack / 2 && rint(2) ? 'die' : 'call', hid };          // 6끗 이상
+      if (!need) return { type: canHalf && rint(8) === 0 ? 'half' : 'call', hid };               // 가끔 블러프
+      return { type: rint(10) < 6 ? 'die' : 'call', hid };
+    },
     async onHost(a) {
       const { G, ctx } = a;
       if (G.phase !== 'bet') return;
       if (ctx.hid !== G.hid || !ctx.hands) return voidHand(a, '진행 기기가 바뀌었어요');
-      for (const i of order(G)) if (ctx.hands[i]) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
+      for (const i of order(G)) if (ctx.hands[i] && a.S.seats[i] && !a.S.seats[i].bot) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
     },
     async onKey(a, i) { const { G, ctx } = a; if (G.phase === 'bet' && ctx.hid === G.hid && ctx.hands[i]) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] }); },
     onReq(a, i, r) {
       const { S, G } = a;
-      if (r.type === 'start') { if (!G.started && eligible(S).length >= 2) { G.started = true; G.nextAt = a.now; a.log('섯다 시작'); } return; }
+      if (r.type === 'start') { if (!G.started && canDeal(S)) { G.started = true; G.nextAt = a.now; a.log('섯다 시작'); } return; }
       if (G.phase !== 'bet' || G.cur !== i || r.hid !== G.hid) return;
       if (['die', 'call', 'half'].includes(r.type)) act(a, i, r.type);
     },
@@ -3248,7 +3299,7 @@ window.startHoldem = function (ROOM_ARG) {
         if (G.cur < 0 || !G.ps[G.cur] || !S.seats[G.cur]) return afterAct(a, G.cur);
         if (now > G.deadline) act(a, G.cur, G.ps[G.cur].in >= G.curBet ? 'call' : 'die');
       } else if (G.started && now >= (G.nextAt || 0)) {
-        if (eligible(S).length >= 2) await startHand(a);
+        if (canDeal(S)) await startHand(a);
         else if (G.phase === 'show') { G.phase = 'idle'; }
       }
     },
@@ -3290,8 +3341,8 @@ window.startHoldem = function (ROOM_ARG) {
       else if (G.phase === 'show' && G.res) {
         const w = G.res.winners.map(x => (S.seats[x.seat] ? S.seats[x.seat].name : '?')).join(', ');
         msg.append(el('b', null, w), ' 승리' + (G.res.show && G.res.winners[0] && G.res.names[G.res.winners[0].seat] ? ' · ' + G.res.names[G.res.winners[0].seat] : ''));
-      } else if (!G.started) msg.textContent = eligible(S).length >= 2 ? '누구든 “게임 시작”을 누르면 패를 돌려요' : '2명 이상 앉으면 시작할 수 있어요';
-      else msg.textContent = eligible(S).length >= 2 ? '곧 다음 판을 돌려요' : '상대를 기다리는 중이에요';
+      } else if (!G.started) msg.textContent = canDeal(S) ? '누구든 “게임 시작”을 누르면 패를 돌려요' : '2명 이상 앉으면 시작할 수 있어요 (혼자면 봇 추가)';
+      else msg.textContent = canDeal(S) ? '곧 다음 판을 돌려요' : '상대를 기다리는 중이에요';
       felt.append(mid, msg, spots);
       stage.append(felt);
     },
@@ -3314,10 +3365,10 @@ window.startHoldem = function (ROOM_ARG) {
         const half = el('button', 'btn raise', '하프'); half.disabled = p.raises >= 2 || seat.stack <= need; half.onclick = () => send('half', { hid: G.hid });
         row.append(die, call, half); dock.append(row);
       } else if (!G.started) {
-        const row = el('div', 'actions two');
-        const b = el('button', 'btn primary', '게임 시작'); const n = eligible(S).length;
-        b.disabled = n < 2; if (n < 2) b.append(el('small', null, '2명 이상 필요')); b.onclick = () => send('start');
-        row.append(b, v.inviteButton()); dock.append(row);
+        const row = el('div', 'actions three');
+        const b = el('button', 'btn primary', '게임 시작'), ready = canDeal(S);
+        b.disabled = !ready; if (!ready) b.append(el('small', null, '2명 이상 필요')); b.onclick = () => send('start');
+        row.append(b, v.botButton(), v.inviteButton()); dock.append(row);
       } else dock.append(v.wait(G.phase === 'bet' ? '다른 플레이어 차례예요' : '다음 판을 기다리는 중'));
     },
   };
@@ -3537,11 +3588,21 @@ window.startHoldem = function (ROOM_ARG) {
         break;
       }
       case 'leave': if (st) await removeSeat(a, i); break;
+      case 'addBot': if (st) addBot(); break;
+      case 'kickBots': if (st) for (let k = 0; k < H.seats.length; k++) if (H.seats[k] && H.seats[k].bot) await removeSeat(a, k); break;
       case 'rebuy': if (st && st.stack === 0 && !(game.busy && game.busy(H.game, i))) { st.stack += START; st.buyin += START; addLog(H, `${st.name}: 리바이 +${fmt(START)}`); } break;
       case 'name': if (st && name) st.name = name; break;
       case 'key': if (st) { st.pub = slimPub(r.pub); if (game.onKey) await game.onKey(a, i); } break;
       default: if (st) await game.onReq(a, i, r);
     }
+  }
+  function addBot() {
+    const s = H.seats.findIndex(x => !x);
+    if (s < 0) return;
+    const used = new Set(H.seats.filter(Boolean).map(x => x.name));
+    let k = 1; while (used.has(`봇 ${k}호`)) k++;
+    H.seats[s] = { uid: 'bot_' + Math.random().toString(36).slice(2, 10), name: `봇 ${k}호`, stack: START, buyin: START, pub: null, bot: true };
+    addLog(H, `봇 ${k}호가 앉았어요`);
   }
   async function removeSeat(a, i) {
     const st = H.seats[i];
@@ -3554,12 +3615,29 @@ window.startHoldem = function (ROOM_ARG) {
     // free seats of people who have been gone for 3 minutes
     if (peersReadyAt && a.now > peersReadyAt) {
       for (let i = 0; i < H.seats.length; i++) {
-        const st = H.seats[i]; if (!st) continue;
+        const st = H.seats[i]; if (!st || st.bot) continue;
         if (online.uids.has(st.uid)) { lastSeen[st.uid] = a.now; continue; }
         if (a.now - (lastSeen[st.uid] || hostSince) > 180000 && !(game.busy && game.busy(H.game, i))) await removeSeat(a, i);
       }
     }
     await game.tick(a);
+    if (game.bot) await driveBots(api());
+  }
+  const botAt = {};
+  async function driveBots(a) {
+    for (let i = 0; i < H.seats.length; i++) {
+      const st = H.seats[i];
+      if (!st || !st.bot) { delete botAt[i]; continue; }
+      if (st.stack === 0 && !(game.busy && game.busy(H.game, i)) && !(H.game.bets && H.game.bets[i])) {
+        st.stack += START; st.buyin += START; addLog(H, `${st.name}: 리바이 +${fmt(START)}`);
+      }
+      const want = game.bot(a, i);
+      if (!want) { delete botAt[i]; continue; }
+      if (!botAt[i]) { botAt[i] = a.now + 700 + rint(1500); continue; }
+      if (a.now < botAt[i]) continue;
+      delete botAt[i];
+      await game.onReq(a, i, game.bot(a, i) || want);
+    }
   }
   function takeOver() {
     if (amHost || !S) return;
@@ -3656,6 +3734,7 @@ window.startHoldem = function (ROOM_ARG) {
       wait(t) { return el('div', 'waitline', t); },
       sitButton() { const b = el('button', 'btn primary sitbtn', '자리에 앉기'); b.disabled = !loaded || !!connErr || v.seats.every(Boolean); b.onclick = () => openJoin(-1); return b; },
       inviteButton() { const b = el('button', 'btn', '친구 초대'); b.onclick = () => openModal('invite'); return b; },
+      botButton() { const b = el('button', 'btn', '봇 추가'); b.disabled = me < 0 || v.seats.every(Boolean); b.onclick = () => { send('addBot'); toast('봇을 앉혔어요'); }; return b; },
       spot(i) {
         const st = v.seats[i], sp = el('div', 'spot' + (i === me ? ' me' : '') + (st ? '' : ' empty'));
         sp.append(el('div', 'spot-cards'));
@@ -3664,9 +3743,9 @@ window.startHoldem = function (ROOM_ARG) {
           else sp.append(el('div', 'gplate', '빈 자리'));
           return sp;
         }
-        const plate = el('div', 'gplate'), av = el('i', 'gav', (st.name || '?').slice(0, 1));
-        av.style.background = colorFor(st.uid);
-        if (online.uids.has(st.uid)) av.classList.add('on');
+        const plate = el('div', 'gplate' + (st.bot ? ' bot' : '')), av = el('i', 'gav', st.bot ? '봇' : (st.name || '?').slice(0, 1));
+        av.style.background = st.bot ? '#b9c2bd' : colorFor(st.uid);
+        if (!st.bot && online.uids.has(st.uid)) av.classList.add('on');
         const t = el('div', 'gptxt'); t.append(el('span', 'gname', st.name), el('span', 'gstack num', fmt(st.stack)));
         plate.append(av, t); sp.append(plate);
         return sp;
@@ -3696,6 +3775,11 @@ window.startHoldem = function (ROOM_ARG) {
     const net = st.stack - st.buyin;
     info.append(el('b', null, st.name), el('span', null, '내 칩 '), el('b', 'num gold', fmt(st.stack)));
     if (net) info.append(el('span', 'num ' + (net > 0 ? 'good' : 'bad'), (net > 0 ? '+' : '−') + fmt(Math.abs(net))));
+    if (v.seats.some(x => !x)) {
+      const bb = el('button', 'botpill', '+ 봇 추가');
+      bb.onclick = () => { send('addBot'); toast('봇을 앉혔어요'); };
+      info.append(bb);
+    }
     dock.append(info);
     if (st.stack === 0 && !(game.busy && game.busy(v.game, view.me)) && !Object.keys(v.game.bets && v.game.bets[view.me] ? { x: 1 } : {}).length) {
       const row = el('div', 'actions one'), b = el('button', 'btn primary');
@@ -3779,6 +3863,14 @@ window.startHoldem = function (ROOM_ARG) {
       lv.onclick = () => { closeSheet(); openModal('confirm', { title: '자리에서 일어날까요?', body: '남은 칩과 진행 중인 베팅은 사라져요.', ok: '일어나기', fn: () => send('leave') }); };
       row.append(rb, lv); sh.append(row);
     }
+    if (st) {
+      const bots = v.seats.filter(x => x && x.bot).length;
+      sh.append(section('봇'), el('p', null, game.botNote || '봇은 혼자서도 같이 놀 수 있게 자리를 채워 줘요.'));
+      const row = el('div', 'row');
+      const add = el('button', 'btn', '봇 추가'); add.disabled = v.seats.every(Boolean); add.onclick = () => { send('addBot'); toast('봇을 앉혔어요'); closeSheet(); };
+      const kick = el('button', 'btn fold', `봇 모두 내보내기${bots ? ' (' + bots + ')' : ''}`); kick.disabled = !bots; kick.onclick = () => { send('kickBots'); closeSheet(); };
+      row.append(add, kick); sh.append(row);
+    }
     sh.append(section('친구 초대하기'), inviteBlock());
     sh.append(section('점수판'));
     const list = el('div', 'list');
@@ -3831,13 +3923,13 @@ window.startHoldem = function (ROOM_ARG) {
   const GAMES = [
     { id: 'holdem', prefix: '', name: '텍사스 홀덤', mark: '♠', tone: 'green', players: '2~8명 · 봇 가능',
       desc: '내 카드 2장과 공용 카드 5장으로 족보를 겨루는 포커. 베팅과 블러프의 심리전!' },
-    { id: 'blackjack', prefix: 'B', name: '블랙잭', mark: '21', tone: 'red', players: '1~5명 · 딜러와 대결',
+    { id: 'blackjack', prefix: 'B', name: '블랙잭', mark: '21', tone: 'red', players: '1~5명 · 봇 가능',
       desc: '카드 합을 21에 가깝게 만들어 딜러를 이기는 게임. 21을 넘으면 버스트!' },
-    { id: 'roulette', prefix: 'R', name: '룰렛', mark: '0', tone: 'wine', players: '1~8명',
+    { id: 'roulette', prefix: 'R', name: '룰렛', mark: '0', tone: 'wine', players: '1~8명 · 봇 가능',
       desc: '구슬이 멈출 숫자와 색을 맞혀요. 숫자 하나를 정확히 맞히면 35배.' },
-    { id: 'baccarat', prefix: 'K', name: '바카라', mark: '9', tone: 'blue', players: '1~8명',
+    { id: 'baccarat', prefix: 'K', name: '바카라', mark: '9', tone: 'blue', players: '1~8명 · 봇 가능',
       desc: '플레이어와 뱅커 중 9에 더 가까울 쪽에 걸어요. 규칙은 자동, 고르기만 하면 끝.' },
-    { id: 'seotda', prefix: 'S', name: '섯다', mark: '光', tone: 'hwatu', players: '2~5명 · 화투',
+    { id: 'seotda', prefix: 'S', name: '섯다', mark: '光', tone: 'hwatu', players: '혼자도 OK · 봇 가능',
       desc: '화투 2장으로 겨루는 한국식 포커. 38광땡을 잡으면 판을 쓸어요.' },
   ];
   const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

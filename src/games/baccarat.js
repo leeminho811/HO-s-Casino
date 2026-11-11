@@ -42,6 +42,8 @@
     ],
     init: () => ({ phase: 'bet', no: 0, deadline: 0, stepAt: 0, bets: {}, ready: {}, last: {}, P: [], B: [], win: null, wins: {}, hist: [] }),
     busy: (G, i) => G.phase === 'deal' && !!G.bets[i],
+    botNote: '봇도 플레이어/뱅커에 걸어요. 내가 칩을 올리면 봇도 따라 베팅해요.',
+    bot: (a, i) => C.botBets(a, i, () => (a.rint(12) === 0 ? 't' : a.rint(2) ? 'b' : 'p'), 1),
     onReq(a, i, r) {
       const { S, G } = a, st = S.seats[i];
       if (G.phase !== 'bet') return;

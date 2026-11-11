@@ -161,6 +161,41 @@ try {
   } else ok(false, 'baccarat round finished');
   await sleep(300); await shot(A, '18-baccarat-done');
 
+  // ---- seotda alone against bots
+  room = await createFromLobby(A, 'seotda');
+  await sit(A, '민수');
+  ok(await dockBtn(A, '게임 시작').isDisabled(), 'seotda cannot start alone');
+  await dockBtn(A, '봇 추가').click();
+  await A.page.locator('#gDock .botpill').click();
+  ok(await until(async () => { const x = await table(room); return x && x.seats.filter(s => s && s.bot).length === 2; }), 'two bots seated');
+  await shot(A, '22-seotda-bots');
+  await dockBtn(A, '게임 시작').click();
+  let botHands = 0, botActed = false;
+  t = await until(async () => {
+    const call = A.page.locator('#gDock .btn.call'); if (await call.count()) { try { await call.click({ timeout: 1000 }); } catch (e) { /* re-rendered */ } }
+    const x = await table(room); if (!x) return null;
+    if (x.game.phase === 'bet') { botHands = Math.max(botHands, Object.keys(x.game.enc).length); if (x.log.some(l => /^봇 \d호: (다이|콜|체크|하프|올인)/.test(l))) botActed = true; }
+    return x.game.no >= 2 && botActed ? x : null;
+  }, 60000, 400);
+  ok(!!t, 'bots play seotda hands with a person');
+  ok(botHands === 1, 'only the person’s hand is in the shared state (bot hands stay on the host)');
+  await shot(A, '23-seotda-bots-play');
+  await A.page.locator('#gMenu').click();
+  await A.page.locator('.sheet .btn.fold:has-text("봇 모두 내보내기")').click();
+  ok(await until(async () => { const x = await table(room); return x && !x.seats.some(s => s && s.bot); }, 15000), 'menu removes all bots');
+
+  // ---- blackjack with a bot
+  room = await createFromLobby(A, 'blackjack');
+  await sit(A, '민수');
+  await A.page.locator('#gDock .botpill').click();
+  await A.page.locator('#gDock .chipbtn.c50').click(); await dockBtn(A, '베팅 완료').click();
+  t = await until(async () => {
+    for (const b of ['스탠드']) { const s = dockBtn(A, b); if (await s.count()) { try { await s.click({ timeout: 1000 }); } catch (e) { /* re-rendered */ } } }
+    const x = await table(room); return x && x.game.phase === 'done' ? x : null;
+  }, 45000, 400);
+  ok(t && Object.keys(t.game.hands).length === 2, 'blackjack bot bets and plays alongside');
+  await sleep(300); await shot(A, '24-blackjack-bot');
+
   // ---- seotda: hidden cards, betting, showdown, host takeover
   room = await createFromLobby(A, 'seotda');
   await sit(A, '민수');

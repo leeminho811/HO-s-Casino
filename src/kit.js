@@ -211,11 +211,21 @@
         break;
       }
       case 'leave': if (st) await removeSeat(a, i); break;
+      case 'addBot': if (st) addBot(); break;
+      case 'kickBots': if (st) for (let k = 0; k < H.seats.length; k++) if (H.seats[k] && H.seats[k].bot) await removeSeat(a, k); break;
       case 'rebuy': if (st && st.stack === 0 && !(game.busy && game.busy(H.game, i))) { st.stack += START; st.buyin += START; addLog(H, `${st.name}: 리바이 +${fmt(START)}`); } break;
       case 'name': if (st && name) st.name = name; break;
       case 'key': if (st) { st.pub = slimPub(r.pub); if (game.onKey) await game.onKey(a, i); } break;
       default: if (st) await game.onReq(a, i, r);
     }
+  }
+  function addBot() {
+    const s = H.seats.findIndex(x => !x);
+    if (s < 0) return;
+    const used = new Set(H.seats.filter(Boolean).map(x => x.name));
+    let k = 1; while (used.has(`봇 ${k}호`)) k++;
+    H.seats[s] = { uid: 'bot_' + Math.random().toString(36).slice(2, 10), name: `봇 ${k}호`, stack: START, buyin: START, pub: null, bot: true };
+    addLog(H, `봇 ${k}호가 앉았어요`);
   }
   async function removeSeat(a, i) {
     const st = H.seats[i];
@@ -228,12 +238,29 @@
     // free seats of people who have been gone for 3 minutes
     if (peersReadyAt && a.now > peersReadyAt) {
       for (let i = 0; i < H.seats.length; i++) {
-        const st = H.seats[i]; if (!st) continue;
+        const st = H.seats[i]; if (!st || st.bot) continue;
         if (online.uids.has(st.uid)) { lastSeen[st.uid] = a.now; continue; }
         if (a.now - (lastSeen[st.uid] || hostSince) > 180000 && !(game.busy && game.busy(H.game, i))) await removeSeat(a, i);
       }
     }
     await game.tick(a);
+    if (game.bot) await driveBots(api());
+  }
+  const botAt = {};
+  async function driveBots(a) {
+    for (let i = 0; i < H.seats.length; i++) {
+      const st = H.seats[i];
+      if (!st || !st.bot) { delete botAt[i]; continue; }
+      if (st.stack === 0 && !(game.busy && game.busy(H.game, i)) && !(H.game.bets && H.game.bets[i])) {
+        st.stack += START; st.buyin += START; addLog(H, `${st.name}: 리바이 +${fmt(START)}`);
+      }
+      const want = game.bot(a, i);
+      if (!want) { delete botAt[i]; continue; }
+      if (!botAt[i]) { botAt[i] = a.now + 700 + rint(1500); continue; }
+      if (a.now < botAt[i]) continue;
+      delete botAt[i];
+      await game.onReq(a, i, game.bot(a, i) || want);
+    }
   }
   function takeOver() {
     if (amHost || !S) return;
@@ -330,6 +357,7 @@
       wait(t) { return el('div', 'waitline', t); },
       sitButton() { const b = el('button', 'btn primary sitbtn', '자리에 앉기'); b.disabled = !loaded || !!connErr || v.seats.every(Boolean); b.onclick = () => openJoin(-1); return b; },
       inviteButton() { const b = el('button', 'btn', '친구 초대'); b.onclick = () => openModal('invite'); return b; },
+      botButton() { const b = el('button', 'btn', '봇 추가'); b.disabled = me < 0 || v.seats.every(Boolean); b.onclick = () => { send('addBot'); toast('봇을 앉혔어요'); }; return b; },
       spot(i) {
         const st = v.seats[i], sp = el('div', 'spot' + (i === me ? ' me' : '') + (st ? '' : ' empty'));
         sp.append(el('div', 'spot-cards'));
@@ -338,9 +366,9 @@
           else sp.append(el('div', 'gplate', '빈 자리'));
           return sp;
         }
-        const plate = el('div', 'gplate'), av = el('i', 'gav', (st.name || '?').slice(0, 1));
-        av.style.background = colorFor(st.uid);
-        if (online.uids.has(st.uid)) av.classList.add('on');
+        const plate = el('div', 'gplate' + (st.bot ? ' bot' : '')), av = el('i', 'gav', st.bot ? '봇' : (st.name || '?').slice(0, 1));
+        av.style.background = st.bot ? '#b9c2bd' : colorFor(st.uid);
+        if (!st.bot && online.uids.has(st.uid)) av.classList.add('on');
         const t = el('div', 'gptxt'); t.append(el('span', 'gname', st.name), el('span', 'gstack num', fmt(st.stack)));
         plate.append(av, t); sp.append(plate);
         return sp;
@@ -370,6 +398,11 @@
     const net = st.stack - st.buyin;
     info.append(el('b', null, st.name), el('span', null, '내 칩 '), el('b', 'num gold', fmt(st.stack)));
     if (net) info.append(el('span', 'num ' + (net > 0 ? 'good' : 'bad'), (net > 0 ? '+' : '−') + fmt(Math.abs(net))));
+    if (v.seats.some(x => !x)) {
+      const bb = el('button', 'botpill', '+ 봇 추가');
+      bb.onclick = () => { send('addBot'); toast('봇을 앉혔어요'); };
+      info.append(bb);
+    }
     dock.append(info);
     if (st.stack === 0 && !(game.busy && game.busy(v.game, view.me)) && !Object.keys(v.game.bets && v.game.bets[view.me] ? { x: 1 } : {}).length) {
       const row = el('div', 'actions one'), b = el('button', 'btn primary');
@@ -452,6 +485,14 @@
       const lv = el('button', 'btn fold', '자리에서 일어나기');
       lv.onclick = () => { closeSheet(); openModal('confirm', { title: '자리에서 일어날까요?', body: '남은 칩과 진행 중인 베팅은 사라져요.', ok: '일어나기', fn: () => send('leave') }); };
       row.append(rb, lv); sh.append(row);
+    }
+    if (st) {
+      const bots = v.seats.filter(x => x && x.bot).length;
+      sh.append(section('봇'), el('p', null, game.botNote || '봇은 혼자서도 같이 놀 수 있게 자리를 채워 줘요.'));
+      const row = el('div', 'row');
+      const add = el('button', 'btn', '봇 추가'); add.disabled = v.seats.every(Boolean); add.onclick = () => { send('addBot'); toast('봇을 앉혔어요'); closeSheet(); };
+      const kick = el('button', 'btn fold', `봇 모두 내보내기${bots ? ' (' + bots + ')' : ''}`); kick.disabled = !bots; kick.onclick = () => { send('kickBots'); closeSheet(); };
+      row.append(add, kick); sh.append(row);
     }
     sh.append(section('친구 초대하기'), inviteBlock());
     sh.append(section('점수판'));

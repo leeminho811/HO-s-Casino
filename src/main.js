@@ -19,13 +19,13 @@
   const GAMES = [
     { id: 'holdem', prefix: '', name: '텍사스 홀덤', mark: '♠', tone: 'green', players: '2~8명 · 봇 가능',
       desc: '내 카드 2장과 공용 카드 5장으로 족보를 겨루는 포커. 베팅과 블러프의 심리전!' },
-    { id: 'blackjack', prefix: 'B', name: '블랙잭', mark: '21', tone: 'red', players: '1~5명 · 딜러와 대결',
+    { id: 'blackjack', prefix: 'B', name: '블랙잭', mark: '21', tone: 'red', players: '1~5명 · 봇 가능',
       desc: '카드 합을 21에 가깝게 만들어 딜러를 이기는 게임. 21을 넘으면 버스트!' },
-    { id: 'roulette', prefix: 'R', name: '룰렛', mark: '0', tone: 'wine', players: '1~8명',
+    { id: 'roulette', prefix: 'R', name: '룰렛', mark: '0', tone: 'wine', players: '1~8명 · 봇 가능',
       desc: '구슬이 멈출 숫자와 색을 맞혀요. 숫자 하나를 정확히 맞히면 35배.' },
-    { id: 'baccarat', prefix: 'K', name: '바카라', mark: '9', tone: 'blue', players: '1~8명',
+    { id: 'baccarat', prefix: 'K', name: '바카라', mark: '9', tone: 'blue', players: '1~8명 · 봇 가능',
       desc: '플레이어와 뱅커 중 9에 더 가까울 쪽에 걸어요. 규칙은 자동, 고르기만 하면 끝.' },
-    { id: 'seotda', prefix: 'S', name: '섯다', mark: '光', tone: 'hwatu', players: '2~5명 · 화투',
+    { id: 'seotda', prefix: 'S', name: '섯다', mark: '光', tone: 'hwatu', players: '혼자도 OK · 봇 가능',
       desc: '화투 2장으로 겨루는 한국식 포커. 38광땡을 잡으면 판을 쓸어요.' },
   ];
   const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

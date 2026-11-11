@@ -62,26 +62,28 @@ eq(sd.splitPots({ 0: { in: 50, folded: false }, 1: { in: 200, folded: false }, 2
 let seed = 12345;
 const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 const rint = n => Math.floor(rnd() * n);
-async function simulate(id, players, steps, drive, invariant) {
+async function simulate(id, players, steps, drive, invariant, bots = 0) {
   const game = G[id];
   const S = { seats: new Array(game.seats).fill(null), log: [], game: game.init() };
-  for (let i = 0; i < players; i++) S.seats[i] = { uid: 'u' + i, name: 'P' + i, stack: 1000, buyin: 1000, pub: null };
+  for (let i = 0; i < players + bots; i++) S.seats[i] = { uid: (i < players ? 'u' : 'bot_') + i, name: 'P' + i, stack: 1000, buyin: 1000, pub: null, bot: i >= players };
   const ctx = {}; let now = 1e6, rounds = 0, lastNo = 0, bad = null;
   const api = () => ({ S, get G() { return S.game; }, ctx, now, rint, START: 1000, log: t => S.log.push(t), seal: async (i, o) => ({ p: o }), online: () => true });
   for (let k = 0; k < steps && !bad; k++) {
     now += 400;
     await game.tick(api());
-    for (let i = 0; i < players; i++) {
+    for (let i = 0; i < players + bots; i++) {
       const st = S.seats[i];
       if (st.stack === 0 && !game.busy(S.game, i) && !(S.game.bets && S.game.bets[i])) { st.stack += 1000; st.buyin += 1000; }
-      const r = drive(S, S.game, i, rnd);
+      const r = st.bot ? game.bot(api(), i) : drive(S, S.game, i, rnd);
       if (r) await game.onReq(api(), i, r);
+      if (st.bot && S.game.enc && S.game.enc[i]) bad = 'bot cards leaked into the shared state';
     }
     if (S.game.no !== lastNo) { lastNo = S.game.no; rounds++; }
     if (S.seats.filter(Boolean).some(s => s.stack < 0 || !Number.isInteger(s.stack))) bad = 'negative or fractional stack';
     if (invariant && !bad) bad = invariant(S, S.game);
   }
-  ok(!bad && rounds > 20, `${id}: ${rounds} simulated rounds${bad ? ' — ' + bad : ''}`);
+  const botBet = bots && S.log.some(t => S.seats.some(s => s && s.bot && t.includes(s.name + ' ')));
+  ok(!bad && rounds > 20 && (!bots || botBet), `${id}${bots ? ` + ${bots} bots` : ''}: ${rounds} simulated rounds${bad ? ' — ' + bad : ''}${bots && !botBet ? ' — bots never played' : ''}`);
 }
 const houseBet = keys => (S, g, i, r) => {
   if (g.phase !== 'bet' || g.ready[i]) return null;
@@ -105,6 +107,30 @@ const houseBet = keys => (S, g, i, r) => {
     const pot = g.phase === 'bet' ? Object.values(g.ps).reduce((a, p) => a + p.in, 0) : 0;
     return stacks + pot === buy ? null : `chips not conserved: ${stacks}+${pot} != ${buy}`;
   });
+  // with bots: one person + bots
+  await simulate('blackjack', 1, 3000, (S, g, i, r) => {
+    if (g.phase === 'bet') return houseBet(['x'])(S, g, i, r);
+    if (g.phase === 'play' && g.cur === i) return { type: ['hit', 'stand'][rint(2)] };
+    return null;
+  }, null, 2);
+  await simulate('roulette', 1, 3000, houseBet(['red', 'n7']), null, 2);
+  await simulate('baccarat', 1, 3000, houseBet(['p', 'b']), null, 2);
+  await simulate('seotda', 1, 6000, (S, g, i) => {
+    if (!g.started) return { type: 'start' };
+    if (g.phase === 'bet' && g.cur === i) return { type: ['die', 'call', 'call', 'half'][rint(4)], hid: g.hid };
+    return null;
+  }, (S, g) => {
+    const P = S.seats.filter(Boolean), stacks = P.reduce((a, s) => a + s.stack, 0), buy = P.reduce((a, s) => a + s.buyin, 0);
+    const pot = g.phase === 'bet' ? Object.values(g.ps).reduce((a, p) => a + p.in, 0) : 0;
+    return stacks + pot === buy ? null : `chips not conserved: ${stacks}+${pot} != ${buy}`;
+  }, 3);
+  // bots alone never start a round
+  for (const id of ['blackjack', 'roulette', 'baccarat']) {
+    const game = G[id], S = { seats: new Array(game.seats).fill(null), log: [], game: game.init() };
+    S.seats[0] = { uid: 'u0', name: 'P0', stack: 1000, buyin: 1000 }; S.seats[1] = { uid: 'bot_1', name: '봇 1호', stack: 1000, buyin: 1000, bot: true };
+    const a = { S, get G() { return S.game; }, ctx: {}, now: 1e6, rint, log: () => {}, seal: async (i, o) => ({ p: o }) };
+    ok(game.bot(a, 1) === null, `${id}: bot waits until a person bets`);
+  }
   console.log(fails ? `\n${fails} FAILED` : '\nall passed');
   process.exit(fails ? 1 : 0);
 })();
