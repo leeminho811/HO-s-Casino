@@ -1,32 +1,54 @@
-# HO’s Casino — 친구들과 하는 온라인 텍사스 홀덤
+# HO’s Casino — 친구들과 하는 온라인 카지노
 
-친구들이 같은 링크로 접속해 함께 치는 노리밋 홀덤 웹 게임. 원래 claude.ai 아티팩트(홀덤 나이트)로 만들었고,
-지금은 **로그인 없이 링크만으로 들어오는 독립 웹사이트**다.
-실시간 백엔드: Firebase (익명 인증 + Realtime Database), 호스팅: GitHub Pages (저장소 루트의 index.html).
-사용자용 설정 안내는 README.md.
+친구들이 같은 링크로 접속해 함께 노는 웹 게임 모음: 텍사스 홀덤, 블랙잭, 룰렛, 바카라, 섯다(화투).
+원래 claude.ai 아티팩트(홀덤 나이트)였고, 지금은 **로그인 없이 링크만으로 들어오는 독립 웹사이트**다.
+실시간 백엔드: Firebase (익명 인증 + Realtime Database, 프로젝트 `ho-casino`), 호스팅: GitHub Pages (`main` 브랜치 루트의 index.html,
+https://leeminho811.github.io/HO-s-Casino/). 사용자용 안내는 README.md.
 
 ## 구조
 
 ```
-src/engine.js            순수 게임 로직 (DOM·네트워크 없음). 족보 평가, 베팅 라운드, 사이드팟, 봇
-src/app.js               UI + 동기화(딜러/요청 처리, 카드 암호화, 접속 상태), 방 코드(URL 해시), 초대 링크
+src/main.js              진입점: 시작 화면(START) → 로비(게임 고르기, 방 만들기/참여) → 방. 방 코드로 게임을 정함
+src/engine.js            홀덤 순수 게임 로직 (DOM·네트워크 없음). 족보 평가, 베팅 라운드, 사이드팟, 봇
+src/app.js               홀덤 UI + 동기화. main.js 가 window.startHoldem(방코드) 로 시작시킴
+src/kit.js               나머지 게임이 함께 쓰는 방 시스템: 호스트 권한 동기화, 자리/리바이, 초대, 메뉴, 패 암호화
+src/games/common.js      공용 도우미 (칩 단위, 카드 뽑기, 베팅 마감 판단)
+src/games/blackjack.js roulette.js baccarat.js seotda.js   게임 모듈 (로직 + render/dock). Node 에서도 로드됨
 src/backend-firebase.js  Firebase 어댑터 — claude.ai 런타임과 같은 {db, user, room} 모양을 돌려줌
-src/app.css              스타일 (모바일 우선, 한 화면 앱)
+src/app.css, kit.css     스타일 (모바일 우선). kit.css = 시작 화면·로비·kit 게임들
 src/shell.html           HTML 뼈대 — build.py 가 CSS/JS 를 끼워 넣음
 build.py                 src/ → index.html 한 파일로 합치기 (index.html 도 커밋할 것 — Pages 가 그대로 서비스)
-firebase-config.js       Firebase 설정값. 합치지 않고 index.html 이 따로 불러옴 (사용자가 GitHub 웹에서 직접 수정)
-database.rules.json      Realtime Database 보안 규칙 (사용자가 콘솔에 붙여 넣음)
+firebase-config.js       Firebase 설정값. 합치지 않고 index.html 이 따로 불러옴
+database.rules.json      Realtime Database 보안 규칙 (사용자가 콘솔에 붙여 넣음 — 바꾸면 사용자가 다시 게시해야 함)
 firebase.json            에뮬레이터 설정 (테스트용)
-test/engine.test.js      엔진 테스트 (node test/engine.test.js)
-test/e2e-firebase.mjs    Firebase 에뮬레이터 + 브라우저 3개(각자 익명 uid) 실제 플레이 테스트
-test/mock.js, harness.html, run.py   메모리 목(mock) 으로 하는 빠른 시뮬레이션 (window.claude 주입)
+test/engine.test.js, games.test.js   규칙 테스트 (npm test)
+test/e2e-firebase.mjs    에뮬레이터 + 브라우저 3개 홀덤 플레이 테스트
+test/e2e-games.mjs       에뮬레이터 + 시작 화면/로비/블랙잭/룰렛/바카라/섯다 테스트
+test/mock.js, harness.html, run.py   메모리 목(mock) 으로 하는 홀덤 시뮬레이션 (window.claude 주입)
 ```
 
-빌드: `python3 build.py` · 엔진 테스트: `node test/engine.test.js`
+빌드: `python3 build.py` · 규칙 테스트: `npm test`
 E2E: `npm install && npm run test:e2e` (firebase emulators:exec — Java 필요. 테스트가 gstatic 의 SDK 요청을
 node_modules/firebase 의 같은 버전 파일로 바꿔 치기하므로 package.json 의 firebase 버전 = backend-firebase.js 의 VERSION 유지).
 프록시 환경에서 firebase-tools 가 localhost 에뮬레이터 요청까지 HTTPS_PROXY 로 보내면 그 프로세스에만 `HTTPS_PROXY=undefined`.
 목 시뮬레이션: 프로젝트 루트에서 `python3 -m http.server 8765` 실행 후 `python3 test/run.py`
+
+## 방 코드와 게임
+
+- URL 해시 `#CODE` 가 방. 해시가 없으면 시작 화면 → 로비 (이번 탭에서 한 번 봤으면 sessionStorage `ho_lobby` 로 바로 로비).
+- 코드가 **7자이고 첫 글자가 게임 글자**면 그 게임: `B` 블랙잭, `R` 룰렛, `K` 바카라, `S` 섯다. 그 밖의 코드(6자 등)는 홀덤.
+  (보안 규칙을 안 바꾸고 게임 종류를 코드에 담기 위한 방식. 새 게임을 넣으면 main.js 의 GAMES 에 글자를 추가.)
+- 방을 옮길 때는 해시를 바꾸고 페이지를 새로 읽는다 (상태를 깨끗이 버리려고).
+- 칩은 방마다 따로 (1,000 시작, 0 이 되면 리바이). 게임 사이 공용 지갑은 없음.
+
+## kit 게임 모듈 (src/games/*.js)
+
+`HOGames[id] = { id, name, seats, rules[], init(), busy(G,i), onReq(a,i,r), tick(a), onLeave(a,i), onHost(a), onKey(a,i), render(v), dock(v) }`
+- `a` (호스트 쪽): `{S, G, ctx, now, rint, log, seal(i,obj)}` — S 는 방 상태, G = S.game, ctx 는 호스트 기기에만 있는 비밀(섯다 패).
+- `v` (화면 쪽): `{S, G, me, seat, secret, stage, dock, send, el, fmt, cards, countdown, spot, chip, wait, ...}`.
+- 블랙잭·룰렛·바카라는 비밀이 없다 (카드는 필요할 때 무한 덱에서 뽑음) → 호스트가 바뀌어도 판이 그대로 이어짐.
+  섯다는 `G.enc[seat]` 에 봉한 패를 두고, 호스트가 바뀌면 그 판은 무효(판돈 반환).
+- CSS 클래스 이름이 app.css(홀덤)와 겹치지 않게 주의 (`.mine`, `.plate`, `.av` 등은 홀덤 것).
 
 ## 동기화 설계 (바꾸지 말 것)
 
@@ -62,3 +84,5 @@ app.js 는 `{db, user, room}` 세 객체만 쓴다 (모양은 `test/mock.js`). `
 
 - 한국어로 소통. 하노이 거주, 친구들과 재미로 칠 용도 (실제 돈 없음).
 - UI 문구는 모두 한국어, 모바일 화면 기준으로 확인할 것. 사이트 제목은 “HO’s Casino”.
+- 배포는 `main` 에 푸시 (사용자가 허락함). 작업 브랜치와 `main` 을 같은 커밋으로 유지.
+- 아직 없는 것: 고스톱(요청 시 kit 모듈로 추가), 블랙잭 스플릿/인슈어런스, 섯다 구사(재경기).

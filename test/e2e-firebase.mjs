@@ -72,7 +72,7 @@ async function newPlayer(browser, label, { config = true } = {}) {
     return r.fulfill({ path: f, contentType: 'application/javascript' });
   });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
-  if (config) await ctx.route('**/firebase-config.js', r => r.fulfill({ contentType: 'application/javascript', body: TEST_CONFIG }));
+  await ctx.route('**/firebase-config.js', r => r.fulfill({ contentType: 'application/javascript', body: config ? TEST_CONFIG : 'window.FIREBASE_CONFIG = { apiKey: "여기에_붙여넣기" };' }));
   const page = await ctx.newPage();
   page.setDefaultTimeout(4000);
   page.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|fonts\./.test(m.text())) errors.push(`${label} console: ${m.text()}`); });
@@ -132,7 +132,7 @@ try {
   }
   for (const p of P) await p.page.locator('.seat.tap .plate').first().waitFor({ timeout: 15000 });
   ok((await P[0].page.evaluate(() => location.hash)) === '#' + ROOM, 'room code normalised in the URL');
-  ok((await P[0].page.title()) === 'HO’s Casino', 'page title');
+  ok((await P[0].page.title()).endsWith('HO’s Casino'), 'page title');
   await P[0].page.screenshot({ path: path.join(SHOTS, '01-empty.png') });
 
   const names = ['민수', '지영', '도우너'];
@@ -238,7 +238,7 @@ try {
 
   // 7) site without Firebase config shows the setup message instead of breaking
   const Q = await newPlayer(browser, 'Q', { config: false });
-  await Q.page.goto(BASE);
+  await Q.page.goto(BASE + '#NOCONF');
   await sleep(800);
   const txt = await Q.page.locator('#banner').innerText();
   ok(/Firebase/.test(txt), 'unconfigured site explains setup: ' + txt.slice(0, 40));

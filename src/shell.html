@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HO’s Casino</title>
-<meta name="description" content="친구들과 링크 하나로 함께하는 텍사스 홀덤. 로그인 없이 바로 입장.">
+<meta name="description" content="친구들과 링크 하나로 즐기는 카지노 — 홀덤, 블랙잭, 룰렛, 바카라, 섯다. 로그인 없이 바로 입장.">
 <meta property="og:title" content="HO’s Casino">
-<meta property="og:description" content="친구들과 링크 하나로 함께하는 텍사스 홀덤. 로그인 없이 바로 입장.">
+<meta property="og:description" content="친구들과 링크 하나로 즐기는 카지노 — 홀덤, 블랙잭, 룰렛, 바카라, 섯다. 로그인 없이 바로 입장.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#0a100e">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,7 +20,32 @@
 </style>
 </head>
 <body>
-<div id="app">
+<div id="splash">
+  <div class="sp-suits" aria-hidden="true"><i>♠</i><i>♥</i><i>♦</i><i>♣</i><i>♠</i><i>♦</i></div>
+  <div class="sp-crest" aria-hidden="true">♠</div>
+  <h1 class="sp-title"><span class="ho">HO’s</span><span class="ca">CASINO</span></h1>
+  <p class="sp-sub">친구들과 함께하는 카드 게임 라운지</p>
+  <button class="sp-start" id="startBtn">START</button>
+  <p class="sp-foot">홀덤 · 블랙잭 · 룰렛 · 바카라 · 섯다</p>
+</div>
+<div id="lobby" hidden>
+  <header class="top"><div class="brand"><span class="mark" aria-hidden="true">♠</span><b>HO’s Casino</b></div><div class="meta">로비</div></header>
+  <div id="lobbyBody"></div>
+</div>
+<div id="gapp" hidden>
+  <header class="top">
+    <button class="icon-btn" id="gBack" aria-label="로비로 나가기">‹</button>
+    <div class="brand"><b id="gTitle"></b></div>
+    <button class="roomchip" id="gCode" aria-label="방 코드 · 친구 초대"></button>
+    <div class="meta"></div>
+    <div class="online" id="gOnline" hidden title="지금 접속 중"><i></i><span id="gOnlineN">0</span>명</div>
+    <button class="icon-btn" id="gMenu" aria-label="메뉴">☰</button>
+  </header>
+  <div class="banner" id="gBanner" hidden><span></span><button hidden></button></div>
+  <main id="gStage" class="gstage"></main>
+  <section class="dock" id="gDock"></section>
+</div>
+<div id="app" hidden>
   <header class="top">
     <div class="brand"><span class="mark" aria-hidden="true">♠</span><b>HO’s Casino</b></div>
     <div class="meta" id="meta"></div>
@@ -55,6 +80,12 @@
 </script>
 <script>
 /*APP*/
+</script>
+<script>
+/*KIT*/
+</script>
+<script>
+/*MAIN*/
 </script>
 </body>
 </html>

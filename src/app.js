@@ -1,4 +1,4 @@
-(function () {
+window.startHoldem = function (ROOM_ARG) {
   'use strict';
   const E = window.PokerEngine;
   const N = E.MAXS;
@@ -40,17 +40,7 @@
 
   /* ---------------- room (table) code from the URL: …/#ABC123 ---------------- */
   const HOSTED = !(window.claude && typeof window.claude.use === 'function'); // false only in the test mock
-  const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const normRoom = s => { const c = String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return /^[A-Z0-9]{4,12}$/.test(c) ? c : null; };
-  const newRoomCode = () => Array.from({ length: 6 }, () => CODE_CH[Math.floor(Math.random() * CODE_CH.length)]).join('');
-  const hashRoom = () => { try { return normRoom(decodeURIComponent(location.hash.slice(1))); } catch (e) { return null; } };
-  const ROOM = (function () {
-    if (!HOSTED) return 'main';
-    const code = hashRoom() || normRoom(LS.get('pk_room')) || newRoomCode();
-    LS.set('pk_room', code);
-    if (location.hash !== '#' + code) { try { history.replaceState(null, '', location.pathname + location.search + '#' + code); } catch (e) { /* ignore */ } }
-    return code;
-  })();
+  const ROOM = HOSTED ? ROOM_ARG : 'main';
   const TABLE = 'tables/' + ROOM;
   const REQ = TABLE + '/req';
   const denied = e => !!e && (e.code === 'invalid_argument' || e.code === 'permission_denied');
@@ -1226,15 +1216,10 @@
       sh.append(section('친구 초대하기'));
       sh.append(el('p', null, '아래 링크를 카톡 등으로 보내면 친구가 로그인 없이 바로 같은 테이블에 앉을 수 있어요.'));
       sh.append(inviteBlock());
-      sh.append(section('다른 테이블'));
-      sh.append(el('p', null, '방 코드가 다르면 완전히 다른 테이블이에요. 친구가 보낸 방 코드를 넣거나 새 테이블을 열 수 있어요.'));
-      const jr = el('div', 'row');
-      const ci = el('input', 'code-input'); ci.id = 'roomInput'; ci.maxLength = 12; ci.placeholder = '방 코드'; ci.autocapitalize = 'characters'; ci.setAttribute('aria-label', '방 코드');
-      ci.onkeydown = e => { if (e.key === 'Enter') gotoRoom(ci.value); };
-      const go = el('button', 'btn', '이동'); go.onclick = () => gotoRoom(ci.value);
-      const nw = el('button', 'btn', '새 테이블 만들기'); nw.onclick = () => gotoRoom(newRoomCode());
-      jr.append(ci, go, nw);
-      sh.append(jr);
+      const lb = el('button', 'btn', '로비로 나가기 (다른 게임 · 다른 방)');
+      lb.style.cssText = 'width:100%;margin-top:10px';
+      lb.onclick = () => window.HOMain.lobby();
+      sh.append(lb);
     }
     if (v) {
       sh.append(section('점수판'));
@@ -1313,14 +1298,6 @@
     try { input.focus(); input.select(); if (document.execCommand('copy')) { toast('초대 링크를 복사했어요'); return; } } catch (e) { /* fallback */ }
     toast('링크를 길게 눌러 복사해 주세요');
   }
-  function gotoRoom(v) {
-    const c = normRoom(v);
-    if (!c) { toast('방 코드는 영문·숫자 4~12자예요'); return; }
-    if (c === ROOM) { closeSheet(); toast('지금 있는 테이블이에요'); return; }
-    LS.set('pk_room', c);
-    location.hash = c; // hashchange → reload into the other table
-  }
-
   /* ---------------- misc ---------------- */
   function toast(t) {
     const x = $('#toast');
@@ -1350,11 +1327,10 @@
     $('#sheetBack').addEventListener('click', e => { if (e.target.id === 'sheetBack') closeSheet(); });
     $('#modalBack').addEventListener('click', e => { if (e.target.id === 'modalBack') closeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSheet(); } });
-    if (HOSTED) window.addEventListener('hashchange', () => { const c = hashRoom(); if (c && c !== ROOM) location.reload(); });
   }
 
   wire();
   const hot = window.claude && window.claude.hot;
   if (hot && hot.snapshot) { try { hot.snapshot(() => ({ ctx: amHost && ctx ? clone(ctx) : null })); } catch (e) { /* ignore */ } }
   if (hot && hot.ready) hot.ready(boot); else boot((hot && hot.data) || {});
-})();
+};

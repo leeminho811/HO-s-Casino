@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HO’s Casino</title>
-<meta name="description" content="친구들과 링크 하나로 함께하는 텍사스 홀덤. 로그인 없이 바로 입장.">
+<meta name="description" content="친구들과 링크 하나로 즐기는 카지노 — 홀덤, 블랙잭, 룰렛, 바카라, 섯다. 로그인 없이 바로 입장.">
 <meta property="og:title" content="HO’s Casino">
-<meta property="og:description" content="친구들과 링크 하나로 함께하는 텍사스 홀덤. 로그인 없이 바로 입장.">
+<meta property="og:description" content="친구들과 링크 하나로 즐기는 카지노 — 홀덤, 블랙잭, 룰렛, 바카라, 섯다. 로그인 없이 바로 입장.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#0a100e">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -271,10 +271,240 @@ input[type=range] { flex: 1; accent-color: var(--brass); height: 30px; }
 body { word-break: keep-all; overflow-wrap: anywhere; }
 .seat { width: max-content; white-space: nowrap; }
 
+/* ---------- splash, lobby and the table games (blackjack, roulette, baccarat, seotda) ---------- */
+[hidden] { display: none !important; }
+:root { --gold-1: #f6dc9a; --gold-2: #dcb05a; --gold-3: #a8782c; }
+.good { color: var(--ok); } .bad { color: #e58a80; } .gold { color: var(--brass); }
+
+/* a little more shine on the main buttons everywhere */
+.btn.raise, .btn.primary { background: linear-gradient(180deg, #f3d489 0%, var(--brass) 55%, #c8983f 100%); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 6px 18px rgba(220, 176, 90, 0.18); }
+.btn.raise:disabled, .btn.primary:disabled { box-shadow: none; }
+.seat.turn .plate { box-shadow: 0 0 0 2px var(--brass), 0 0 22px rgba(220, 176, 90, 0.45); }
+
+/* ---------- splash ---------- */
+#splash { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center;
+  padding: 24px; overflow: hidden;
+  background: radial-gradient(80% 55% at 50% 36%, #1f4a3a 0%, #0f2a22 38%, var(--bg) 78%); }
+#splash::before { content: ''; position: absolute; inset: 14px; border: 1px solid rgba(220, 176, 90, 0.28); border-radius: 26px; pointer-events: none; }
+#splash::after { content: ''; position: absolute; inset: 20px; border: 1px solid rgba(220, 176, 90, 0.1); border-radius: 21px; pointer-events: none; }
+.sp-suits i { position: absolute; font-style: normal; font-family: Georgia, serif; font-size: clamp(60px, 18vw, 130px); color: rgba(220, 176, 90, 0.07); animation: drift 9s ease-in-out infinite alternate; }
+.sp-suits i:nth-child(1) { left: 6%; top: 8%; } .sp-suits i:nth-child(2) { right: 8%; top: 14%; color: rgba(184, 35, 44, 0.16); animation-delay: -2s; }
+.sp-suits i:nth-child(3) { left: 10%; bottom: 16%; color: rgba(184, 35, 44, 0.16); animation-delay: -4s; } .sp-suits i:nth-child(4) { right: 6%; bottom: 10%; animation-delay: -6s; }
+.sp-suits i:nth-child(5) { left: 44%; top: 3%; font-size: 44px; animation-delay: -3s; } .sp-suits i:nth-child(6) { left: 48%; bottom: 4%; font-size: 44px; color: rgba(184, 35, 44, 0.14); animation-delay: -5s; }
+@keyframes drift { from { transform: translateY(-8px) rotate(-6deg); } to { transform: translateY(10px) rotate(7deg); } }
+.sp-crest { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; color: var(--ink);
+  background: radial-gradient(circle at 35% 30%, var(--gold-1), var(--gold-2) 60%, var(--gold-3)); box-shadow: 0 0 0 4px rgba(220, 176, 90, 0.18), 0 10px 30px rgba(0, 0, 0, 0.5); margin-bottom: 6px; }
+.sp-title { margin: 0; font-family: var(--display); font-weight: 800; line-height: 0.95; display: flex; flex-direction: column; align-items: center; position: relative; }
+.sp-title .ho, .sp-title .ca { background: linear-gradient(180deg, #fff3cf 0%, var(--gold-1) 28%, var(--gold-2) 58%, var(--gold-3) 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 4px 18px rgba(220, 176, 90, 0.28)); }
+.sp-title .ho { font-size: clamp(76px, 25vw, 170px); letter-spacing: -0.01em; }
+.sp-title .ca { font-size: clamp(34px, 11.6vw, 80px); letter-spacing: 0.2em; margin-right: -0.2em; margin-top: 6px; }
+.sp-sub { margin: 14px 0 22px; color: var(--muted); font-size: 15px; letter-spacing: 0.04em; }
+.sp-start { position: relative; min-width: 210px; height: 62px; border-radius: 999px; border: 0; cursor: pointer; font-family: var(--display); font-weight: 800; font-size: 24px; letter-spacing: 0.26em; padding-left: 0.26em;
+  color: var(--ink); background: linear-gradient(180deg, #fbe7ad 0%, var(--gold-2) 55%, #b98a35 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 12px 36px rgba(220, 176, 90, 0.35); animation: pulse 2.2s ease-in-out infinite; }
+.sp-start:active { transform: scale(0.97); }
+@keyframes pulse { 0%, 100% { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 0 0 0 rgba(220, 176, 90, 0.45), 0 12px 36px rgba(220, 176, 90, 0.3); } 50% { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 0 0 14px rgba(220, 176, 90, 0), 0 12px 36px rgba(220, 176, 90, 0.4); } }
+.sp-foot { margin: 22px 0 0; color: var(--brass-dim); font-size: 12px; letter-spacing: 0.12em; }
+
+/* ---------- lobby ---------- */
+#lobby { height: 100%; display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; padding-top: env(safe-area-inset-top); }
+#lobbyBody { flex: 1; min-height: 0; overflow: auto; padding: 6px 14px calc(26px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+.lb-card { border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(180deg, #15221d, var(--panel)); padding: 16px; }
+.lb-card h2, .lb-head h2 { margin: 0 0 4px; font-family: var(--kr-display); font-weight: 400; font-size: 21px; }
+.lb-card p, .lb-head p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.lb-head { padding: 6px 2px 0; }
+.lb-row { display: flex; gap: 8px; margin-top: 12px; }
+.lb-row .code-input { flex: 1; min-width: 0; height: 50px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); padding: 0 14px;
+  font-family: inherit; font-size: 17px; letter-spacing: 0.14em; text-transform: uppercase; }
+.lb-row .btn { flex: none; min-width: 92px; }
+.lb-recent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+.lb-recent small { color: var(--muted); font-size: 12px; margin-right: 2px; }
+.lb-recent button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 6px 11px; font-size: 12px; color: var(--muted); cursor: pointer; }
+.lb-recent button b { color: var(--brass); letter-spacing: 0.06em; }
+.lb-games { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 700px) { .lb-games { grid-template-columns: 1fr 1fr; } }
+.lb-game { position: relative; display: grid; grid-template-columns: 68px 1fr; gap: 12px 14px; padding: 14px; border-radius: 18px; border: 1px solid var(--line); overflow: hidden;
+  background: linear-gradient(135deg, var(--g1, #17362c) 0%, var(--panel) 62%); }
+.lb-game::after { content: ''; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, var(--g2, rgba(220, 176, 90, 0.14)), transparent 70%); pointer-events: none; }
+.lb-game.green { --g1: #17402f; } .lb-game.red { --g1: #4a1c20; --g2: rgba(208, 86, 75, 0.2); } .lb-game.wine { --g1: #3d1836; --g2: rgba(215, 166, 217, 0.16); }
+.lb-game.blue { --g1: #172e4a; --g2: rgba(159, 181, 230, 0.18); } .lb-game.hwatu { --g1: #4a2a14; --g2: rgba(240, 150, 90, 0.2); }
+.lb-tile { width: 68px; height: 86px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(160deg, #fbf5e6, #e6dcc2); color: var(--ink);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.2) inset; transform: rotate(-4deg); }
+.lb-tile span { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1; }
+.lb-game.red .lb-tile span, .lb-game.hwatu .lb-tile span { color: var(--suit-red); }
+.lb-game.wine .lb-tile span { color: #1f8f5f; } .lb-game.blue .lb-tile span { color: #2b4f8f; }
+.lb-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.lb-title h3 { margin: 0; font-size: 19px; font-weight: 700; }
+.lb-title small { color: var(--brass); font-size: 12px; }
+.lb-body p { margin: 5px 0 0; color: #c3cfc7; font-size: 13.5px; line-height: 1.55; }
+.lb-game .rules, .lb-acts { grid-column: 1 / -1; }
+.lb-acts { display: flex; gap: 8px; }
+.lb-acts .btn { min-height: 44px; font-size: 14px; flex: 1; }
+.lb-acts .btn.primary { flex: 1.6; }
+.rules { margin: 0; padding: 0 0 0 18px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+.rules li { margin: 3px 0; }
+.lb-foot { text-align: center; color: var(--muted); font-size: 12px; margin: 4px 0 0; }
+
+/* ---------- shared table-game frame ---------- */
+#gapp { height: 100%; display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; padding-top: env(safe-area-inset-top); }
+#gapp .top { padding-left: 10px; gap: 8px; }
+#gapp .brand b { font-family: var(--kr-display); font-weight: 400; font-size: 21px; }
+.roomchip { border: 1px solid rgba(220, 176, 90, 0.4); background: rgba(220, 176, 90, 0.1); color: var(--brass); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; cursor: pointer; }
+.gstage { flex: 1; min-height: 0; overflow: auto; padding: 4px 10px 10px; display: flex; flex-direction: column; gap: 8px; --cw: 44px; }
+.gfelt { flex: 1 0 auto; border-radius: 30px; padding: 16px 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative;
+  background: radial-gradient(120% 90% at 50% 0%, var(--felt-hi) 0%, var(--felt) 45%, var(--felt-lo) 100%);
+  box-shadow: 0 0 0 7px var(--rail), 0 0 0 8px var(--rail-hi), 0 0 0 1px rgba(220, 176, 90, 0.35) inset, 0 18px 40px rgba(0, 0, 0, 0.5); margin: 8px; }
+.glabel { font-size: 11px; letter-spacing: 0.2em; color: rgba(245, 238, 221, 0.6); font-weight: 600; }
+.gval { min-height: 24px; font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; color: var(--ivory); }
+.gmsg { text-align: center; color: rgba(245, 238, 221, 0.82); font-size: 14px; min-height: 22px; }
+.gmsg b { color: #fff; } .gmsg.good, .gmsg.good b { color: var(--gold-1); font-weight: 700; }
+.cardrow { display: flex; justify-content: center; gap: 5px; min-height: calc(var(--cw) * 1.4); }
+.cardrow .card.deal { animation: deal 0.42s var(--d, 0s) cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+.spots { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 6px; width: 100%; margin-top: auto; --cw: 36px; }
+.spot { position: relative; width: 31%; min-width: 96px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px; border-radius: 16px; }
+.spot.turn { background: rgba(220, 176, 90, 0.12); box-shadow: 0 0 0 2px var(--brass), 0 0 22px rgba(220, 176, 90, 0.35); }
+.spot.win { background: rgba(220, 176, 90, 0.1); }
+.spot-cards { min-height: calc(var(--cw) * 1.4); display: flex; align-items: flex-end; justify-content: center; }
+.spot .cardrow { gap: 0; } .spot .cardrow .card + .card { margin-left: calc(var(--cw) * -0.42); }
+.gplate { display: flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 9px 3px 3px; border-radius: 999px; background: rgba(8, 14, 12, 0.72); border: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.gplate.sit { padding: 8px 14px; color: var(--brass); border-style: dashed; border-color: rgba(220, 176, 90, 0.5); cursor: pointer; font-weight: 700; }
+.spot.empty .gplate:not(.sit) { padding: 7px 12px; opacity: 0.5; }
+.spot.me .gplate { border-color: rgba(220, 176, 90, 0.6); }
+.gav { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 12px; color: #10120f; position: relative; }
+.gav.on::after { content: ''; position: absolute; right: -2px; bottom: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); border: 2px solid #0b1210; }
+.gptxt { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.gname { color: var(--text); font-weight: 600; max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gstack { color: var(--brass); font-weight: 600; }
+.gtag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(8, 14, 12, 0.75); color: var(--ivory); white-space: nowrap; }
+.gtag.good { background: var(--brass); color: var(--ink); } .gtag.bad { color: #f0a59c; } .gtag.even { color: var(--muted); }
+.gchip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--ivory); }
+.gchip i, .chipbtn { background: repeating-conic-gradient(var(--c1, #c8983f) 0 30deg, var(--c2, #f7efd9) 30deg 60deg); }
+.gchip i { width: 15px; height: 15px; border-radius: 50%; display: inline-block; position: relative; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+.gchip i::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--c1, #c8983f); }
+.gmine { display: flex; align-items: baseline; gap: 7px; font-size: 13px; color: var(--muted); padding: 0 2px 8px; }
+.gmine b:first-child { color: var(--text); font-size: 15px; margin-right: auto; }
+.gintro { color: var(--muted); font-size: 13px; line-height: 1.55; padding: 0 2px 10px; }
+.chips { display: flex; justify-content: center; gap: 12px; padding: 2px 0 10px; }
+.chipbtn { width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: pointer; position: relative; font-weight: 800; font-size: 14px; color: #fff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
+.chipbtn::before { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: var(--c1); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.55) inset; z-index: 0; }
+.chipbtn { isolation: isolate; } .chipbtn::before { z-index: -1; }
+.chipbtn.c10 { --c1: #2f6fb5; } .chipbtn.c50 { --c1: #b8232c; } .chipbtn.c100 { --c1: #1f7a52; } .chipbtn.c500 { --c1: #2a2522; --c2: #dcb05a; }
+.chipbtn:disabled { opacity: 0.35; cursor: default; }
+.chipbtn:active:not(:disabled) { transform: translateY(2px) scale(0.96); }
+.chipbtn.sel { outline: 3px solid var(--gold-1); outline-offset: 3px; transform: translateY(-3px); }
+.sitbtn { min-height: 50px; }
+
+/* blackjack */
+.bj-dealer { display: flex; flex-direction: column; align-items: center; gap: 6px; --cw: 50px; }
+
+/* roulette */
+.rl { --rw: min(44vw, 190px); }
+.rtop { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 6px 4px 2px; }
+.rwheel { width: var(--rw); height: var(--rw); flex: none; position: relative; border-radius: 50%;
+  box-shadow: 0 0 0 6px var(--rail), 0 0 0 8px var(--brass-dim), 0 14px 30px rgba(0, 0, 0, 0.55); }
+.rdisc { position: absolute; inset: 0; border-radius: 50%; }
+.rdisc span { position: absolute; left: 50%; top: 50%; width: 16px; margin: -5px 0 0 -8px; text-align: center; font-size: 8.5px; line-height: 10px; font-weight: 700; color: #fff; }
+.rhub { position: absolute; inset: 27%; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #7a5330, #2a1a10 70%); box-shadow: 0 0 0 3px var(--brass-dim), 0 0 0 9px rgba(0, 0, 0, 0.35); }
+.rball { position: absolute; left: 50%; top: 13.5%; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #cfcfcf); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
+.rwheel::after { content: ''; position: absolute; left: 50%; top: -9px; margin-left: -6px; border: 6px solid transparent; border-top: 9px solid var(--gold-1); }
+.rinfo { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 110px; flex: 1; }
+.rresult { width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 32px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); }
+.rresult.red { background: #b8232c; color: #fff; } .rresult.black { background: #191513; color: #fff; } .rresult.green { background: #1f8f5f; color: #fff; }
+.rresult.red, .rresult.black, .rresult.green { box-shadow: 0 0 0 2px var(--gold-1), 0 0 24px rgba(220, 176, 90, 0.5); animation: popin 0.4s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes popin { from { transform: scale(0.5); opacity: 0; } to { transform: none; opacity: 1; } }
+.rl .gmsg { color: var(--muted); }
+.rhist { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; max-width: 150px; }
+.rhist i { font-style: normal; font-size: 10px; font-weight: 700; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
+.rhist i { box-shadow: 0 0 0 1px rgba(245, 238, 221, 0.35); } .rhist i.red, .rc.red { background: #b8232c; } .rhist i.black, .rc.black { background: #191513; } .rhist i.green, .rc.green { background: #1f8f5f; }
+.rboard { padding: 8px; border-radius: 16px; background: linear-gradient(180deg, var(--felt), var(--felt-lo)); box-shadow: 0 0 0 4px var(--rail), 0 0 0 1px rgba(220, 176, 90, 0.35) inset; margin: 6px 4px; display: flex; flex-direction: column; gap: 3px; }
+.rgrid { display: grid; grid-template-columns: 1.15fr repeat(12, 1fr) 1.3fr; grid-template-rows: repeat(3, 36px); gap: 2px; }
+.rc { position: relative; border: 1px solid rgba(245, 238, 221, 0.28); border-radius: 4px; color: #fff; font-weight: 700; font-size: 12px; padding: 0; cursor: pointer; min-width: 0; font-family: inherit; }
+.rc.zero { grid-row: 1 / span 3; grid-column: 1; border-radius: 12px 4px 4px 12px; }
+.rc.out { background: rgba(8, 14, 12, 0.35); font-size: 11px; }
+.rc.out.red { background: #b8232c; } .rc.out.black { background: #191513; }
+.rc:disabled { cursor: default; opacity: 0.9; }
+.rc.hit { box-shadow: 0 0 0 2px var(--gold-1), 0 0 14px rgba(246, 220, 154, 0.8); z-index: 2; }
+.rc em, .bc-spot em { position: absolute; right: -3px; top: -6px; z-index: 3; font-style: normal; font-size: 9.5px; font-weight: 800; line-height: 15px; min-width: 15px; padding: 0 4px; border-radius: 999px; background: #7d8a84; color: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+.rc em.mybet, .bc-spot em.mybet { background: var(--gold-1); color: var(--ink); }
+.rrow { display: grid; gap: 2px; } .rrow.three { grid-template-columns: repeat(3, 1fr); padding: 0 calc(100% * 1.3 / 14.45) 0 calc(100% * 1.15 / 14.45); } .rrow.six { grid-template-columns: repeat(6, 1fr); padding: 0 calc(100% * 1.3 / 14.45) 0 calc(100% * 1.15 / 14.45); }
+.rrow .rc { height: 34px; }
+.rseats { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 6px; align-items: center; }
+.rseat { display: flex; align-items: baseline; gap: 6px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); font-size: 12px; }
+.rseat.me { border-color: rgba(220, 176, 90, 0.6); }
+.rseat span { color: var(--brass); font-weight: 600; } .rseat em { font-style: normal; color: var(--muted); }
+.rseat em.good { color: var(--ok); font-weight: 700; } .rseat em.bad { color: #e58a80; }
+.rseats .sitbtn { min-height: 34px; padding: 0 14px; font-size: 13px; border-radius: 999px; }
+
+/* baccarat */
+.bc .gfelt { gap: 14px; }
+.bc-hands { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; --cw: 46px; }
+.bc-hand { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border-radius: 18px; background: rgba(8, 14, 12, 0.22); border: 1px solid rgba(245, 238, 221, 0.12); }
+.bc-hand.p .glabel { color: #a9c3f5; } .bc-hand.b .glabel { color: #f3a9a2; }
+.bc-hand.win { box-shadow: 0 0 0 2px var(--gold-1), 0 0 24px rgba(220, 176, 90, 0.4); }
+.bc-hand .gval { font-size: 26px; font-family: var(--display); }
+.bc-spots { display: grid; grid-template-columns: 1fr 0.8fr 1fr; gap: 8px; width: 100%; }
+.bc-spot { position: relative; min-height: 76px; border-radius: 16px; border: 1.5px solid rgba(245, 238, 221, 0.3); background: rgba(8, 14, 12, 0.3); color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-family: inherit; }
+.bc-spot b { font-size: 16px; } .bc-spot small { font-size: 11px; opacity: 0.75; }
+.bc-spot.p { background: rgba(43, 79, 143, 0.55); } .bc-spot.b { background: rgba(184, 35, 44, 0.5); } .bc-spot.t { background: rgba(31, 143, 95, 0.45); }
+.bc-spot:disabled { cursor: default; } .bc-spot:active:not(:disabled) { transform: scale(0.98); }
+.bc-spot.hit { box-shadow: 0 0 0 2px var(--gold-1), 0 0 20px rgba(246, 220, 154, 0.7); }
+.bc-spot em { right: 6px; top: -8px; font-size: 11px; line-height: 18px; }
+.bc-road { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; min-height: 18px; }
+.bc-road i { font-style: normal; width: 17px; height: 17px; border-radius: 50%; font-size: 9px; font-weight: 800; display: grid; place-items: center; color: #fff; }
+.bc-road i.p { background: #2b4f8f; } .bc-road i.b { background: #b8232c; } .bc-road i.t { background: #1f8f5f; }
+
+/* seotda (hwatu) */
+.sd-mid { display: flex; flex-direction: column; align-items: center; min-height: 44px; }
+.sd-mid small { font-size: 11px; letter-spacing: 0.2em; color: rgba(245, 238, 221, 0.6); }
+.sd-mid b { font-family: var(--display); font-size: 28px; color: var(--gold-1); }
+.hwrow { display: flex; gap: 3px; justify-content: center; --hw: 34px; }
+.hwrow.big { --hw: 52px; gap: 6px; }
+.hw { width: var(--hw); height: calc(var(--hw) * 1.56); border-radius: 5px; position: relative; flex: none; background: linear-gradient(170deg, #fffaf0, #efe4cc); border: calc(var(--hw) * 0.07) solid #b3202a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; animation: deal 0.4s backwards; }
+.hw.back { background: linear-gradient(160deg, #c62b35, #8f1620); border-color: #7a1019; }
+.hw.back::after { content: ''; position: absolute; inset: 14%; border-radius: 3px; border: 1px solid rgba(255, 255, 255, 0.25); }
+.hw.dim { filter: brightness(0.6) saturate(0.6); }
+.hw-n { font-family: var(--display); font-weight: 800; font-size: calc(var(--hw) * 0.46); line-height: 1; }
+.hw-i { font-size: calc(var(--hw) * 0.4); line-height: 1.15; }
+.hw-t { font-size: calc(var(--hw) * 0.2); color: #6b5a48; line-height: 1.2; white-space: nowrap; }
+.hw-g, .hw-y { position: absolute; top: 2%; right: 4%; font-size: calc(var(--hw) * 0.22); font-weight: 800; width: calc(var(--hw) * 0.34); height: calc(var(--hw) * 0.34); border-radius: 50%; display: grid; place-items: center; line-height: 1; }
+.hw-g { background: #b3202a; color: #fff; } .hw-y { background: #e9dcc0; color: #7a5a2a; }
+.hwrow:not(.big) .hw-t { display: none; }
+.sd-mine { display: flex; align-items: center; gap: 14px; padding-bottom: 10px; }
+.sd-mine .l1 { font-family: var(--kr-display); font-size: 22px; color: var(--gold-1); } .sd-mine .l2 { color: var(--muted); font-size: 13px; }
+.sunbtn { position: absolute; top: 0; right: 8%; width: 20px; height: 20px; border-radius: 50%; background: #f7f3e8; color: #222; font-size: 10px; font-weight: 800; display: grid; place-items: center; }
+@media (max-width: 380px) { .chipbtn { width: 50px; height: 50px; } .rgrid { grid-template-rows: repeat(3, 32px); } }
+
 </style>
 </head>
 <body>
-<div id="app">
+<div id="splash">
+  <div class="sp-suits" aria-hidden="true"><i>♠</i><i>♥</i><i>♦</i><i>♣</i><i>♠</i><i>♦</i></div>
+  <div class="sp-crest" aria-hidden="true">♠</div>
+  <h1 class="sp-title"><span class="ho">HO’s</span><span class="ca">CASINO</span></h1>
+  <p class="sp-sub">친구들과 함께하는 카드 게임 라운지</p>
+  <button class="sp-start" id="startBtn">START</button>
+  <p class="sp-foot">홀덤 · 블랙잭 · 룰렛 · 바카라 · 섯다</p>
+</div>
+<div id="lobby" hidden>
+  <header class="top"><div class="brand"><span class="mark" aria-hidden="true">♠</span><b>HO’s Casino</b></div><div class="meta">로비</div></header>
+  <div id="lobbyBody"></div>
+</div>
+<div id="gapp" hidden>
+  <header class="top">
+    <button class="icon-btn" id="gBack" aria-label="로비로 나가기">‹</button>
+    <div class="brand"><b id="gTitle"></b></div>
+    <button class="roomchip" id="gCode" aria-label="방 코드 · 친구 초대"></button>
+    <div class="meta"></div>
+    <div class="online" id="gOnline" hidden title="지금 접속 중"><i></i><span id="gOnlineN">0</span>명</div>
+    <button class="icon-btn" id="gMenu" aria-label="메뉴">☰</button>
+  </header>
+  <div class="banner" id="gBanner" hidden><span></span><button hidden></button></div>
+  <main id="gStage" class="gstage"></main>
+  <section class="dock" id="gDock"></section>
+</div>
+<div id="app" hidden>
   <header class="top">
     <div class="brand"><span class="mark" aria-hidden="true">♠</span><b>HO’s Casino</b></div>
     <div class="meta" id="meta"></div>
@@ -984,7 +1214,7 @@ body { word-break: keep-all; overflow-wrap: anywhere; }
 
 </script>
 <script>
-(function () {
+window.startHoldem = function (ROOM_ARG) {
   'use strict';
   const E = window.PokerEngine;
   const N = E.MAXS;
@@ -1026,17 +1256,7 @@ body { word-break: keep-all; overflow-wrap: anywhere; }
 
   /* ---------------- room (table) code from the URL: …/#ABC123 ---------------- */
   const HOSTED = !(window.claude && typeof window.claude.use === 'function'); // false only in the test mock
-  const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const normRoom = s => { const c = String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return /^[A-Z0-9]{4,12}$/.test(c) ? c : null; };
-  const newRoomCode = () => Array.from({ length: 6 }, () => CODE_CH[Math.floor(Math.random() * CODE_CH.length)]).join('');
-  const hashRoom = () => { try { return normRoom(decodeURIComponent(location.hash.slice(1))); } catch (e) { return null; } };
-  const ROOM = (function () {
-    if (!HOSTED) return 'main';
-    const code = hashRoom() || normRoom(LS.get('pk_room')) || newRoomCode();
-    LS.set('pk_room', code);
-    if (location.hash !== '#' + code) { try { history.replaceState(null, '', location.pathname + location.search + '#' + code); } catch (e) { /* ignore */ } }
-    return code;
-  })();
+  const ROOM = HOSTED ? ROOM_ARG : 'main';
   const TABLE = 'tables/' + ROOM;
   const REQ = TABLE + '/req';
   const denied = e => !!e && (e.code === 'invalid_argument' || e.code === 'permission_denied');
@@ -2212,15 +2432,10 @@ body { word-break: keep-all; overflow-wrap: anywhere; }
       sh.append(section('친구 초대하기'));
       sh.append(el('p', null, '아래 링크를 카톡 등으로 보내면 친구가 로그인 없이 바로 같은 테이블에 앉을 수 있어요.'));
       sh.append(inviteBlock());
-      sh.append(section('다른 테이블'));
-      sh.append(el('p', null, '방 코드가 다르면 완전히 다른 테이블이에요. 친구가 보낸 방 코드를 넣거나 새 테이블을 열 수 있어요.'));
-      const jr = el('div', 'row');
-      const ci = el('input', 'code-input'); ci.id = 'roomInput'; ci.maxLength = 12; ci.placeholder = '방 코드'; ci.autocapitalize = 'characters'; ci.setAttribute('aria-label', '방 코드');
-      ci.onkeydown = e => { if (e.key === 'Enter') gotoRoom(ci.value); };
-      const go = el('button', 'btn', '이동'); go.onclick = () => gotoRoom(ci.value);
-      const nw = el('button', 'btn', '새 테이블 만들기'); nw.onclick = () => gotoRoom(newRoomCode());
-      jr.append(ci, go, nw);
-      sh.append(jr);
+      const lb = el('button', 'btn', '로비로 나가기 (다른 게임 · 다른 방)');
+      lb.style.cssText = 'width:100%;margin-top:10px';
+      lb.onclick = () => window.HOMain.lobby();
+      sh.append(lb);
     }
     if (v) {
       sh.append(section('점수판'));
@@ -2299,14 +2514,6 @@ body { word-break: keep-all; overflow-wrap: anywhere; }
     try { input.focus(); input.select(); if (document.execCommand('copy')) { toast('초대 링크를 복사했어요'); return; } } catch (e) { /* fallback */ }
     toast('링크를 길게 눌러 복사해 주세요');
   }
-  function gotoRoom(v) {
-    const c = normRoom(v);
-    if (!c) { toast('방 코드는 영문·숫자 4~12자예요'); return; }
-    if (c === ROOM) { closeSheet(); toast('지금 있는 테이블이에요'); return; }
-    LS.set('pk_room', c);
-    location.hash = c; // hashchange → reload into the other table
-  }
-
   /* ---------------- misc ---------------- */
   function toast(t) {
     const x = $('#toast');
@@ -2336,13 +2543,1384 @@ body { word-break: keep-all; overflow-wrap: anywhere; }
     $('#sheetBack').addEventListener('click', e => { if (e.target.id === 'sheetBack') closeSheet(); });
     $('#modalBack').addEventListener('click', e => { if (e.target.id === 'modalBack') closeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSheet(); } });
-    if (HOSTED) window.addEventListener('hashchange', () => { const c = hashRoom(); if (c && c !== ROOM) location.reload(); });
   }
 
   wire();
   const hot = window.claude && window.claude.hot;
   if (hot && hot.snapshot) { try { hot.snapshot(() => ({ ctx: amHost && ctx ? clone(ctx) : null })); } catch (e) { /* ignore */ } }
   if (hot && hot.ready) hot.ready(boot); else boot((hot && hot.data) || {});
+};
+
+</script>
+<script>
+/* Shared helpers for the table games (pure logic, also loadable in Node for tests). */
+(function (root) {
+  'use strict';
+  const RANKS = '23456789TJQKA', SUITS = 'shdc';
+  const C = {
+    CHIPS: [10, 50, 100, 500],
+    // one card from an endless, freshly shuffled shoe
+    draw: rint => RANKS[rint(13)] + SUITS[rint(4)],
+    seated: S => S.seats.map((s, i) => (s ? i : -1)).filter(i => i >= 0),
+    sum: o => Object.values(o || {}).reduce((a, b) => a + b, 0),
+    // Betting window for house games: opens a 20s countdown at the first bet; starts early once
+    // everyone who can bet has bet and pressed "done".
+    shouldStart(S, G, now, hasBet) {
+      const seated = C.seated(S), bettors = seated.filter(hasBet);
+      if (!bettors.length) { G.deadline = 0; return false; }
+      if (!G.deadline) G.deadline = now + 20000;
+      if (now >= G.deadline) return true;
+      return bettors.every(i => G.ready[i]) && seated.every(i => hasBet(i) || S.seats[i].stack === 0);
+    },
+  };
+  root.HOGames = root.HOGames || {};
+  root.HOGames._c = C;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* Blackjack: everyone at the table plays against the house dealer. */
+(function (root) {
+  'use strict';
+  const C = root.HOGames._c;
+  const val = c => (c[0] === 'A' ? 11 : 'TJQK'.includes(c[0]) ? 10 : Number(c[0]));
+  function handVal(cards) {
+    let v = 0, aces = 0;
+    for (const c of cards) { v += val(c); if (c[0] === 'A') aces++; }
+    while (v > 21 && aces) { v -= 10; aces--; }
+    return { v, soft: aces > 0 };
+  }
+  const isBJ = h => h.cards.length === 2 && !h.dbl && handVal(h.cards).v === 21;
+  // total returned to the player (stake included) for a finished hand
+  function settleHand(h, dealer) {
+    const pv = handVal(h.cards).v, dv = handVal(dealer).v, dBJ = dealer.length === 2 && dv === 21;
+    if (pv > 21) return { res: 'bust', pay: 0 };
+    if (isBJ(h)) return dBJ ? { res: 'push', pay: h.bet } : { res: 'bj', pay: h.bet + Math.floor(h.bet * 1.5) };
+    if (dBJ) return { res: 'lose', pay: 0 };
+    if (dv > 21 || pv > dv) return { res: 'win', pay: h.bet * 2 };
+    return pv === dv ? { res: 'push', pay: h.bet } : { res: 'lose', pay: 0 };
+  }
+
+  function nextTurn(a) {
+    const { G, now } = a;
+    const order = Object.keys(G.hands).map(Number).sort((x, y) => x - y);
+    const nxt = order.find(i => !G.hands[i].done);
+    if (nxt === undefined) { G.cur = -1; G.phase = 'dealer'; G.stepAt = now + 800; return; }
+    G.cur = nxt; G.deadline = now + 25000;
+  }
+  function finish(a, i) { a.G.hands[i].done = true; nextTurn(a); }
+  function deal(a) {
+    const { S, G, rint } = a;
+    G.no++; G.hands = {}; G.dealer = [C.draw(rint)];
+    for (const i of C.seated(S)) {
+      if (!G.bets[i]) continue;
+      const h = { cards: [C.draw(rint), C.draw(rint)], bet: G.bets[i], done: false, dbl: false, res: null, pay: 0 };
+      if (isBJ(h)) h.done = true;
+      G.hands[i] = h; G.last[i] = G.bets[i];
+    }
+    G.bets = {}; G.ready = {}; G.phase = 'play';
+    nextTurn(a);
+  }
+  function settle(a) {
+    const { S, G, now } = a;
+    const parts = [];
+    for (const k of Object.keys(G.hands)) {
+      const h = G.hands[k], st = S.seats[k];
+      Object.assign(h, settleHand(h, G.dealer));
+      if (st) { st.stack += h.pay; parts.push(`${st.name} ${h.pay - h.bet >= 0 ? '+' : ''}${h.pay - h.bet}`); }
+    }
+    a.log(`블랙잭 #${G.no} · 딜러 ${handVal(G.dealer).v} · ${parts.join(', ')}`);
+    G.phase = 'done'; G.deadline = now + 6000;
+  }
+
+  const game = {
+    id: 'blackjack', name: '블랙잭', seats: 5,
+    logic: { handVal, settleHand, isBJ },
+    rules: [
+      '카드 합이 21에 가까운 쪽이 이겨요. 21을 넘으면 바로 져요(버스트).',
+      'J·Q·K는 10, A는 1 또는 11로 셉니다.',
+      '히트: 한 장 더 · 스탠드: 멈추기 · 더블: 베팅을 두 배로 올리고 딱 한 장만 더 받기.',
+      '처음 두 장이 21이면 블랙잭 — 1.5배를 받아요. 딜러와 같으면 푸시(무승부).',
+      '딜러는 17 이상이 될 때까지 무조건 카드를 받아요. 카드는 매번 새로 섞인 덱에서 나와요.',
+    ],
+    init: () => ({ phase: 'bet', no: 0, deadline: 0, stepAt: 0, bets: {}, ready: {}, hands: {}, dealer: [], cur: -1, last: {} }),
+    busy: (G, i) => (G.phase === 'play' || G.phase === 'dealer') && !!G.hands[i],
+    onReq(a, i, r) {
+      const { S, G, rint } = a, st = S.seats[i];
+      if (G.phase === 'bet') {
+        if (r.type === 'bet') {
+          const add = Math.floor(Number(r.add));
+          if (!(add > 0) || add > st.stack) return;
+          st.stack -= add; G.bets[i] = (G.bets[i] || 0) + add; delete G.ready[i];
+        } else if (r.type === 'clear' && G.bets[i]) { st.stack += G.bets[i]; delete G.bets[i]; delete G.ready[i]; }
+        else if (r.type === 'rebet' && !G.bets[i] && G.last[i] && st.stack >= G.last[i]) { st.stack -= G.last[i]; G.bets[i] = G.last[i]; }
+        else if (r.type === 'ready' && G.bets[i]) G.ready[i] = true;
+        return;
+      }
+      if (G.phase !== 'play' || G.cur !== i) return;
+      const h = G.hands[i];
+      if (r.type === 'stand') finish(a, i);
+      else if (r.type === 'hit') {
+        h.cards.push(C.draw(rint));
+        if (handVal(h.cards).v >= 21) finish(a, i); else G.deadline = a.now + 25000;
+      } else if (r.type === 'double' && h.cards.length === 2 && st.stack >= h.bet) {
+        st.stack -= h.bet; h.bet *= 2; h.dbl = true; h.cards.push(C.draw(rint)); finish(a, i);
+      }
+    },
+    onLeave(a, i) {
+      const { G } = a;
+      delete G.bets[i]; delete G.ready[i]; delete G.last[i];
+      if (G.hands[i] && G.phase === 'play') { delete G.hands[i]; if (G.cur === i) nextTurn(a); }
+    },
+    tick(a) {
+      const { S, G, now, rint } = a;
+      if (G.phase === 'bet') { if (C.shouldStart(S, G, now, i => G.bets[i] > 0)) deal(a); }
+      else if (G.phase === 'play') { if (G.cur < 0 || !G.hands[G.cur]) nextTurn(a); else if (now > G.deadline) finish(a, G.cur); }
+      else if (G.phase === 'dealer') {
+        if (now < G.stepAt) return;
+        const live = Object.values(G.hands).some(h => handVal(h.cards).v <= 21 && !isBJ(h));
+        if (G.dealer.length < 2 || (live && handVal(G.dealer).v < 17)) { G.dealer.push(C.draw(rint)); G.stepAt = now + 900; }
+        else settle(a);
+      } else if (now >= G.deadline) { G.phase = 'bet'; G.hands = {}; G.dealer = []; G.deadline = 0; G.cur = -1; }
+    },
+
+    /* ---------- UI ---------- */
+    render(v) {
+      const { G, S, el, fmt, stage } = v;
+      stage.className = 'gstage bj';
+      const felt = el('div', 'gfelt');
+      const d = el('div', 'bj-dealer');
+      const dc = G.dealer.slice(); if (G.phase === 'play' && dc.length === 1) dc.push(null);
+      d.append(el('div', 'glabel', '딜러'), v.cards('bjd' + G.no, dc.length ? dc : [undefined, undefined]));
+      const dv = el('div', 'gval', G.dealer.length ? String(handVal(G.dealer).v) : '');
+      if (G.phase === 'done' && handVal(G.dealer).v > 21) { dv.textContent = '버스트'; dv.classList.add('bad'); }
+      d.append(dv);
+      const msg = el('div', 'gmsg');
+      if (G.phase === 'bet') { if (G.deadline) msg.append('베팅 마감까지 ', v.countdown(G.deadline)); else msg.textContent = '칩을 눌러 베팅하면 판이 시작돼요'; }
+      else if (G.phase === 'play') { const s = S.seats[G.cur]; msg.append(el('b', null, G.cur === v.me ? '내' : (s ? s.name + ' 님' : '')), ' 차례 · ', v.countdown(G.deadline)); }
+      else if (G.phase === 'dealer') msg.textContent = '딜러가 카드를 받는 중…';
+      else msg.textContent = '다음 판을 준비하는 중…';
+      const spots = el('div', 'spots');
+      S.seats.forEach((st, i) => {
+        const sp = v.spot(i);
+        if (st) {
+          const h = G.hands[i];
+          if (h) {
+            sp.querySelector('.spot-cards').append(v.cards('bjp' + G.no + ':' + i, h.cards));
+            const hv = handVal(h.cards).v;
+            const tag = el('div', 'gtag', String(hv));
+            if (h.res) {
+              const net = h.pay - h.bet;
+              tag.textContent = { bj: '블랙잭! +' + fmt(net), win: '+' + fmt(net), push: '푸시', lose: '−' + fmt(h.bet), bust: '버스트 −' + fmt(h.bet) }[h.res];
+              tag.classList.add(net > 0 ? 'good' : net < 0 ? 'bad' : 'even');
+            } else if (hv > 21) { tag.textContent = '버스트'; tag.classList.add('bad'); }
+            else if (isBJ(h)) { tag.textContent = '블랙잭!'; tag.classList.add('good'); }
+            sp.append(tag);
+            sp.append(v.chip(h.bet));
+          } else if (G.bets[i]) { sp.append(v.chip(G.bets[i])); if (G.ready[i]) sp.append(el('div', 'gtag even', '준비 완료')); }
+          if (G.phase === 'play' && G.cur === i) sp.classList.add('turn');
+        }
+        spots.append(sp);
+      });
+      felt.append(d, msg, spots);
+      stage.append(felt);
+    },
+    dock(v) {
+      const { G, me, seat, el, fmt, dock, send } = v;
+      if (G.phase === 'bet') {
+        if (G.ready[me]) { dock.append(v.wait(`베팅 ${fmt(G.bets[me])} · 다른 플레이어를 기다리는 중`)); return; }
+        const chips = el('div', 'chips');
+        C.CHIPS.forEach(x => { const b = el('button', 'chipbtn c' + x, String(x)); b.disabled = x > seat.stack; b.onclick = () => send('bet', { add: x }); chips.append(b); });
+        const row = el('div', 'actions');
+        const clr = el('button', 'btn ghost', '지우기'); clr.disabled = !G.bets[me]; clr.onclick = () => send('clear');
+        const re = el('button', 'btn'); re.append('같은 금액', el('small', null, G.last[me] ? fmt(G.last[me]) : '-'));
+        re.disabled = !!G.bets[me] || !G.last[me] || seat.stack < G.last[me]; re.onclick = () => send('rebet');
+        const ok = el('button', 'btn primary'); ok.append('베팅 완료', el('small', null, fmt(G.bets[me] || 0)));
+        ok.disabled = !G.bets[me]; ok.onclick = () => send('ready');
+        row.append(clr, re, ok);
+        dock.append(chips, row);
+      } else if (G.phase === 'play' && G.cur === me) {
+        const h = G.hands[me], row = el('div', 'actions');
+        const hit = el('button', 'btn call', '히트'); hit.onclick = () => send('hit');
+        const st = el('button', 'btn primary', '스탠드'); st.onclick = () => send('stand');
+        const db = el('button', 'btn'); db.append('더블', el('small', null, '+' + fmt(h.bet)));
+        db.disabled = h.cards.length !== 2 || seat.stack < h.bet; db.onclick = () => send('double');
+        row.append(hit, st, db);
+        dock.append(row);
+      } else dock.append(v.wait(G.hands[me] ? (G.phase === 'done' ? '결과 확인 중…' : '다른 플레이어 차례예요') : '다음 판부터 참여할 수 있어요'));
+    },
+  };
+  root.HOGames.blackjack = game;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* European roulette (single zero). */
+(function (root) {
+  'use strict';
+  const C = root.HOGames._c;
+  const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+  const REDS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
+  const color = n => (n === 0 ? 'green' : REDS.has(n) ? 'red' : 'black');
+  const OUT = { red: '빨강', black: '검정', odd: '홀', even: '짝', low: '1–18', high: '19–36', d1: '1–12', d2: '13–24', d3: '25–36', c1: '2:1', c2: '2:1', c3: '2:1' };
+  const validKey = k => (typeof k === 'string' && (k in OUT || (/^n\d{1,2}$/.test(k) && Number(k.slice(1)) <= 36)));
+  const mult = k => (k[0] === 'n' ? 35 : /^[dc]\d$/.test(k) ? 2 : 1);
+  function wins(k, n) {
+    if (k[0] === 'n') return Number(k.slice(1)) === n;
+    if (n === 0) return false;
+    switch (k) {
+      case 'red': return REDS.has(n);
+      case 'black': return !REDS.has(n);
+      case 'odd': return n % 2 === 1;
+      case 'even': return n % 2 === 0;
+      case 'low': return n <= 18;
+      case 'high': return n >= 19;
+      case 'd1': return n <= 12;
+      case 'd2': return n >= 13 && n <= 24;
+      case 'd3': return n >= 25;
+      case 'c1': return n % 3 === 1;
+      case 'c2': return n % 3 === 2;
+      case 'c3': return n % 3 === 0;
+      default: return false;
+    }
+  }
+  // total returned (stakes included) for a set of bets
+  const payout = (bets, n) => Object.entries(bets).reduce((a, [k, amt]) => a + (wins(k, n) ? amt * (mult(k) + 1) : 0), 0);
+
+  let wheelEl = null, rot = 0, spunNo = -1, pick = 10;
+  function buildWheel(el) {
+    const w = el('div', 'rwheel');
+    const seg = 360 / 37;
+    const stops = WHEEL.map((n, k) => `${{ green: '#1f8f5f', red: '#b8232c', black: '#191513' }[color(n)]} ${k * seg}deg ${(k + 1) * seg}deg`).join(',');
+    const disc = el('div', 'rdisc');
+    disc.style.background = `conic-gradient(from ${-seg / 2}deg, ${stops})`;
+    WHEEL.forEach((n, k) => { const t = el('span', null, String(n)); t.style.transform = `rotate(${k * seg}deg) translateY(calc(var(--rw) * -0.43))`; disc.append(t); });
+    disc.append(el('i', 'rhub'));
+    w.append(disc, el('i', 'rball'));
+    return w;
+  }
+
+  const game = {
+    id: 'roulette', name: '룰렛', seats: 8, keep: true,
+    logic: { wins, mult, payout, color, WHEEL },
+    rules: [
+      '구슬이 0~36 중 어느 칸에 멈출지 맞히는 게임이에요. 칩을 고르고 판 위의 칸을 눌러 베팅해요.',
+      '숫자 하나: 35배 · 1–12 / 13–24 / 25–36, 세로줄(2:1): 2배 · 빨강/검정, 홀/짝, 1–18/19–36: 1배.',
+      '0이 나오면 숫자 0에 건 칩만 이겨요.',
+      '첫 칩이 올라가면 20초 뒤에 구슬이 돌아요. 모두 "베팅 완료"를 누르면 바로 돌려요.',
+    ],
+    init: () => ({ phase: 'bet', no: 0, deadline: 0, bets: {}, ready: {}, last: {}, result: null, wins: {}, hist: [] }),
+    busy: (G, i) => G.phase === 'spin' && !!G.bets[i],
+    onReq(a, i, r) {
+      const { S, G } = a, st = S.seats[i];
+      if (G.phase !== 'bet') return;
+      if (r.type === 'bet') {
+        const add = Math.floor(Number(r.add));
+        if (!validKey(r.k) || !(add > 0) || add > st.stack) return;
+        st.stack -= add; G.bets[i] = G.bets[i] || {}; G.bets[i][r.k] = (G.bets[i][r.k] || 0) + add; delete G.ready[i];
+      } else if (r.type === 'clear' && G.bets[i]) { st.stack += C.sum(G.bets[i]); delete G.bets[i]; delete G.ready[i]; }
+      else if (r.type === 'rebet' && !G.bets[i] && G.last[i] && st.stack >= C.sum(G.last[i])) { st.stack -= C.sum(G.last[i]); G.bets[i] = Object.assign({}, G.last[i]); }
+      else if (r.type === 'ready' && G.bets[i]) G.ready[i] = true;
+    },
+    onLeave(a, i) { const { G } = a; delete G.bets[i]; delete G.ready[i]; delete G.last[i]; },
+    tick(a) {
+      const { S, G, now, rint } = a;
+      if (G.phase === 'bet') {
+        if (!C.shouldStart(S, G, now, i => !!G.bets[i])) return;
+        G.no++; G.result = rint(37); G.wins = {}; G.ready = {}; G.phase = 'spin'; G.deadline = now + 6000;
+      } else if (G.phase === 'spin') {
+        if (now < G.deadline) return;
+        const parts = [];
+        for (const k of Object.keys(G.bets)) {
+          const st = S.seats[k], pay = payout(G.bets[k], G.result), net = pay - C.sum(G.bets[k]);
+          G.wins[k] = net; G.last[k] = G.bets[k];
+          if (st) { st.stack += pay; parts.push(`${st.name} ${net >= 0 ? '+' : ''}${net}`); }
+        }
+        G.hist.unshift(G.result); G.hist = G.hist.slice(0, 14);
+        a.log(`룰렛 #${G.no} · ${G.result} ${{ red: '빨강', black: '검정', green: '초록' }[color(G.result)]} · ${parts.join(', ')}`);
+        G.phase = 'done'; G.deadline = now + 6000;
+      } else if (now >= G.deadline) { G.phase = 'bet'; G.bets = {}; G.wins = {}; G.deadline = 0; }
+    },
+
+    /* ---------- UI ---------- */
+    render(v) {
+      const { G, S, el, fmt, stage, me } = v;
+      stage.className = 'gstage rl';
+      if (!wheelEl || !wheelEl.isConnected) {
+        stage.textContent = '';
+        wheelEl = buildWheel(el);
+        const top = el('div', 'rtop'); top.append(wheelEl, el('div', 'rinfo'));
+        stage.append(top, el('div', 'rboard'), el('div', 'rseats'));
+        spunNo = -1;
+      }
+      // wheel
+      const disc = wheelEl.firstChild, seg = 360 / 37;
+      if (G.result != null && G.no !== spunNo && G.phase !== 'bet') {
+        const target = 360 - WHEEL.indexOf(G.result) * seg;
+        const animate = G.phase === 'spin' && spunNo !== -1 || G.phase === 'spin';
+        rot = Math.ceil(rot / 360) * 360 + (animate ? 360 * 5 : 0) + target;
+        disc.style.transition = animate ? 'transform 5.2s cubic-bezier(.12,.6,.12,1)' : 'none';
+        disc.style.transform = `rotate(${rot}deg)`;
+        spunNo = G.no;
+      }
+      wheelEl.classList.toggle('spinning', G.phase === 'spin');
+      // info
+      const info = stage.querySelector('.rinfo'); info.textContent = '';
+      const big = el('div', 'rresult');
+      if (G.phase === 'done') { big.textContent = String(G.result); big.classList.add(color(G.result)); }
+      else if (G.phase === 'spin') big.textContent = '…';
+      else big.textContent = '?';
+      const msg = el('div', 'gmsg');
+      if (G.phase === 'bet') { if (G.deadline) msg.append('베팅 마감 ', v.countdown(G.deadline)); else msg.textContent = '칩을 고르고 칸을 눌러요'; }
+      else if (G.phase === 'spin') msg.textContent = '구슬이 도는 중…';
+      else { const w = G.wins[me]; msg.textContent = w == null ? '결과 확인' : w > 0 ? `+${fmt(w)} 당첨!` : w < 0 ? `−${fmt(-w)}` : '본전'; if (w > 0) msg.classList.add('good'); }
+      const hist = el('div', 'rhist');
+      G.hist.forEach(n => hist.append(el('i', color(n), String(n))));
+      info.append(big, msg, hist);
+      // board
+      const board = stage.querySelector('.rboard'); board.textContent = '';
+      const mine = G.bets[me] || {}, all = {};
+      Object.values(G.bets).forEach(b => Object.entries(b).forEach(([k, x]) => { all[k] = (all[k] || 0) + x; }));
+      const cell = (k, label, cls) => {
+        const c = el('button', 'rc ' + (cls || ''), label);
+        if (G.phase === 'done' && wins(k, G.result)) c.classList.add('hit');
+        if (all[k]) { const b = el('em', mine[k] ? 'mybet' : null, fmt(mine[k] || all[k])); c.append(b); }
+        c.disabled = G.phase !== 'bet' || me < 0 || !!G.ready[me];
+        c.onclick = () => { const st = S.seats[me]; if (!st) return; if (st.stack < pick) { v.toast('칩이 모자라요'); return; } v.send('bet', { k, add: pick }); };
+        return c;
+      };
+      const grid = el('div', 'rgrid');
+      const zero = cell('n0', '0', 'green zero'); grid.append(zero);
+      for (let row = 0; row < 3; row++) for (let col = 0; col < 12; col++) {
+        const n = col * 3 + (3 - row);
+        const c = cell('n' + n, String(n), color(n)); c.style.gridRow = String(row + 1); c.style.gridColumn = String(col + 2); grid.append(c);
+      }
+      ['c3', 'c2', 'c1'].forEach((k, row) => { const c = cell(k, '2:1', 'out'); c.style.gridRow = String(row + 1); c.style.gridColumn = '14'; grid.append(c); });
+      const doz = el('div', 'rrow three'); ['d1', 'd2', 'd3'].forEach(k => doz.append(cell(k, OUT[k], 'out')));
+      const out = el('div', 'rrow six'); ['low', 'even', 'red', 'black', 'odd', 'high'].forEach(k => out.append(cell(k, OUT[k], 'out ' + (k === 'red' || k === 'black' ? k : ''))));
+      board.append(grid, doz, out);
+      // players
+      const seats = stage.querySelector('.rseats'); seats.textContent = '';
+      S.seats.forEach((st, i) => {
+        if (!st) return;
+        const p = el('div', 'rseat' + (i === me ? ' me' : ''));
+        p.append(el('b', null, st.name), el('span', 'num', fmt(st.stack)));
+        const t = G.bets[i] ? C.sum(G.bets[i]) : 0;
+        if (G.phase === 'done' && G.wins[i] != null) { const w = G.wins[i]; p.append(el('em', w > 0 ? 'good' : w < 0 ? 'bad' : '', (w > 0 ? '+' : w < 0 ? '−' : '') + fmt(Math.abs(w)))); }
+        else if (t) p.append(el('em', null, '베팅 ' + fmt(t) + (G.ready[i] ? ' ✓' : '')));
+        seats.append(p);
+      });
+      if (me < 0) seats.append(v.sitButton());
+    },
+    dock(v) {
+      const { G, me, seat, el, fmt, dock, send } = v;
+      if (G.phase !== 'bet') { dock.append(v.wait(G.phase === 'spin' ? '구슬이 도는 중…' : '다음 판을 준비하는 중…')); return; }
+      if (G.ready[me]) { dock.append(v.wait(`베팅 ${fmt(C.sum(G.bets[me]))} · 다른 플레이어를 기다리는 중`)); return; }
+      if (!C.CHIPS.includes(pick) || (pick > seat.stack && seat.stack >= 10)) pick = C.CHIPS.filter(x => x <= seat.stack).pop() || 10;
+      const chips = el('div', 'chips');
+      C.CHIPS.forEach(x => { const b = el('button', 'chipbtn c' + x + (pick === x ? ' sel' : ''), String(x)); b.disabled = x > seat.stack; b.onclick = () => { pick = x; v.rerender(); }; chips.append(b); });
+      const row = el('div', 'actions');
+      const total = G.bets[me] ? C.sum(G.bets[me]) : 0;
+      const clr = el('button', 'btn ghost', '지우기'); clr.disabled = !total; clr.onclick = () => send('clear');
+      const re = el('button', 'btn', '같은 베팅'); re.disabled = !!total || !G.last[me] || seat.stack < C.sum(G.last[me]); re.onclick = () => send('rebet');
+      const ok = el('button', 'btn primary'); ok.append('베팅 완료', el('small', null, fmt(total))); ok.disabled = !total; ok.onclick = () => send('ready');
+      row.append(clr, re, ok);
+      dock.append(chips, row);
+    },
+  };
+  root.HOGames.roulette = game;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* Baccarat (punto banco): bet on Player, Banker or Tie; the drawing rules are automatic. */
+(function (root) {
+  'use strict';
+  const C = root.HOGames._c;
+  const pv = c => (c[0] === 'A' ? 1 : 'TJQK'.includes(c[0]) ? 0 : Number(c[0]));
+  const total = cs => cs.reduce((a, c) => a + pv(c), 0) % 10;
+  // who draws next ('P' | 'B'), or null when the coup is complete
+  function nextDraw(P, B) {
+    if (P.length < 2 || B.length < 2) return P.length <= B.length ? 'P' : 'B';
+    const p2 = total(P.slice(0, 2)), b2 = total(B.slice(0, 2));
+    if (p2 >= 8 || b2 >= 8) return null;
+    if (P.length === 2 && B.length === 2) return p2 <= 5 ? 'P' : (b2 <= 5 ? 'B' : null);
+    if (P.length === 3 && B.length === 2) {
+      const x = pv(P[2]);
+      if (b2 <= 2) return 'B';
+      if (b2 === 3) return x !== 8 ? 'B' : null;
+      if (b2 === 4) return x >= 2 && x <= 7 ? 'B' : null;
+      if (b2 === 5) return x >= 4 && x <= 7 ? 'B' : null;
+      if (b2 === 6) return x === 6 || x === 7 ? 'B' : null;
+    }
+    return null;
+  }
+  const winner = (P, B) => { const p = total(P), b = total(B); return p > b ? 'p' : b > p ? 'b' : 't'; };
+  // total returned (stakes included)
+  function payout(bets, w) {
+    const p = bets.p || 0, b = bets.b || 0, t = bets.t || 0;
+    if (w === 't') return p + b + t * 9;
+    if (w === 'p') return p * 2;
+    return b + Math.floor(b * 0.95);
+  }
+  const SIDE = { p: '플레이어', b: '뱅커', t: '타이' };
+  let pick = 10;
+
+  const game = {
+    id: 'baccarat', name: '바카라', seats: 8,
+    logic: { total, nextDraw, winner, payout },
+    rules: [
+      '“플레이어”와 “뱅커” 두 패 중 합의 끝자리가 9에 가까운 쪽을 맞히는 게임이에요. 나는 어느 쪽이 이길지에만 걸면 돼요.',
+      'A는 1, 2~9는 숫자 그대로, 10·J·Q·K는 0. 합이 10을 넘으면 끝자리만 봐요 (7+8=15 → 5).',
+      '세 번째 카드를 받을지는 정해진 규칙대로 자동으로 진행돼요.',
+      '플레이어 승: 1배 · 뱅커 승: 0.95배(수수료 5%) · 타이: 8배. 타이가 나오면 플레이어/뱅커 베팅은 돌려받아요.',
+    ],
+    init: () => ({ phase: 'bet', no: 0, deadline: 0, stepAt: 0, bets: {}, ready: {}, last: {}, P: [], B: [], win: null, wins: {}, hist: [] }),
+    busy: (G, i) => G.phase === 'deal' && !!G.bets[i],
+    onReq(a, i, r) {
+      const { S, G } = a, st = S.seats[i];
+      if (G.phase !== 'bet') return;
+      if (r.type === 'bet') {
+        const add = Math.floor(Number(r.add));
+        if (!(r.k in SIDE) || !(add > 0) || add > st.stack) return;
+        st.stack -= add; G.bets[i] = G.bets[i] || {}; G.bets[i][r.k] = (G.bets[i][r.k] || 0) + add; delete G.ready[i];
+      } else if (r.type === 'clear' && G.bets[i]) { st.stack += C.sum(G.bets[i]); delete G.bets[i]; delete G.ready[i]; }
+      else if (r.type === 'rebet' && !G.bets[i] && G.last[i] && st.stack >= C.sum(G.last[i])) { st.stack -= C.sum(G.last[i]); G.bets[i] = Object.assign({}, G.last[i]); }
+      else if (r.type === 'ready' && G.bets[i]) G.ready[i] = true;
+    },
+    onLeave(a, i) { const { G } = a; delete G.bets[i]; delete G.ready[i]; delete G.last[i]; },
+    tick(a) {
+      const { S, G, now, rint } = a;
+      if (G.phase === 'bet') {
+        if (!C.shouldStart(S, G, now, i => !!G.bets[i])) return;
+        G.no++; G.P = []; G.B = []; G.win = null; G.wins = {}; G.ready = {}; G.phase = 'deal'; G.stepAt = now + 600;
+      } else if (G.phase === 'deal') {
+        if (now < G.stepAt) return;
+        const who = nextDraw(G.P, G.B);
+        if (who) { G[who].push(C.draw(rint)); G.stepAt = now + (G.P.length + G.B.length >= 4 ? 1300 : 750); return; }
+        G.win = winner(G.P, G.B);
+        const parts = [];
+        for (const k of Object.keys(G.bets)) {
+          const st = S.seats[k], pay = payout(G.bets[k], G.win), net = pay - C.sum(G.bets[k]);
+          G.wins[k] = net; G.last[k] = G.bets[k];
+          if (st) { st.stack += pay; parts.push(`${st.name} ${net >= 0 ? '+' : ''}${net}`); }
+        }
+        G.hist.push(G.win); G.hist = G.hist.slice(-36);
+        a.log(`바카라 #${G.no} · ${SIDE[G.win]} (${total(G.P)}:${total(G.B)}) · ${parts.join(', ')}`);
+        G.phase = 'done'; G.deadline = now + 6000;
+      } else if (now >= G.deadline) { G.phase = 'bet'; G.bets = {}; G.wins = {}; G.deadline = 0; }
+    },
+
+    /* ---------- UI ---------- */
+    render(v) {
+      const { G, S, el, fmt, stage, me } = v;
+      stage.className = 'gstage bc';
+      const felt = el('div', 'gfelt');
+      const hands = el('div', 'bc-hands');
+      [['P', 'p', '플레이어'], ['B', 'b', '뱅커']].forEach(([key, side, label]) => {
+        const h = el('div', 'bc-hand ' + side);
+        if (G.phase === 'done' && G.win === side) h.classList.add('win');
+        const cs = G[key].length ? G[key] : [undefined, undefined];
+        h.append(el('div', 'glabel', label), v.cards('bc' + key + G.no, cs), el('div', 'gval', G[key].length ? String(total(G[key])) : ''));
+        hands.append(h);
+      });
+      const msg = el('div', 'gmsg');
+      if (G.phase === 'bet') { if (G.deadline) msg.append('베팅 마감 ', v.countdown(G.deadline)); else msg.textContent = '칩을 고르고 이길 쪽을 눌러요'; }
+      else if (G.phase === 'deal') msg.textContent = '카드를 여는 중…';
+      else { msg.append(el('b', null, G.win === 't' ? '타이!' : SIDE[G.win] + ' 승')); const w = G.wins[me]; if (w != null) { msg.append(w > 0 ? ` · +${fmt(w)}` : w < 0 ? ` · −${fmt(-w)}` : ' · 본전'); if (w > 0) msg.classList.add('good'); } }
+      const mine = G.bets[me] || {}, all = {};
+      Object.values(G.bets).forEach(b => Object.entries(b).forEach(([k, x]) => { all[k] = (all[k] || 0) + x; }));
+      const spots = el('div', 'bc-spots');
+      [['p', '플레이어', '1 : 1'], ['t', '타이', '8 : 1'], ['b', '뱅커', '0.95 : 1']].forEach(([k, label, odds]) => {
+        const b = el('button', 'bc-spot ' + k);
+        b.append(el('b', null, label), el('small', null, odds));
+        if (all[k]) b.append(el('em', mine[k] ? 'mybet' : null, (mine[k] ? '내 ' : '') + fmt(mine[k] || all[k])));
+        if (G.phase === 'done' && G.win === k) b.classList.add('hit');
+        b.disabled = G.phase !== 'bet' || me < 0 || !!G.ready[me];
+        b.onclick = () => { const st = S.seats[me]; if (!st) return; if (st.stack < pick) { v.toast('칩이 모자라요'); return; } v.send('bet', { k, add: pick }); };
+        spots.append(b);
+      });
+      const road = el('div', 'bc-road');
+      G.hist.forEach(w => road.append(el('i', w, { p: 'P', b: 'B', t: 'T' }[w])));
+      felt.append(hands, msg, spots, road);
+      const seats = el('div', 'rseats');
+      S.seats.forEach((st, i) => {
+        if (!st) return;
+        const p = el('div', 'rseat' + (i === me ? ' me' : ''));
+        p.append(el('b', null, st.name), el('span', 'num', fmt(st.stack)));
+        const t = G.bets[i] ? C.sum(G.bets[i]) : 0;
+        if (G.phase === 'done' && G.wins[i] != null) { const w = G.wins[i]; p.append(el('em', w > 0 ? 'good' : w < 0 ? 'bad' : '', (w > 0 ? '+' : w < 0 ? '−' : '') + fmt(Math.abs(w)))); }
+        else if (t) p.append(el('em', null, '베팅 ' + fmt(t) + (G.ready[i] ? ' ✓' : '')));
+        seats.append(p);
+      });
+      if (me < 0) seats.append(v.sitButton());
+      stage.append(felt, seats);
+    },
+    dock(v) {
+      const { G, me, seat, el, fmt, dock, send } = v;
+      if (G.phase !== 'bet') { dock.append(v.wait(G.phase === 'deal' ? '카드를 여는 중…' : '다음 판을 준비하는 중…')); return; }
+      if (G.ready[me]) { dock.append(v.wait(`베팅 ${fmt(C.sum(G.bets[me]))} · 다른 플레이어를 기다리는 중`)); return; }
+      if (pick > seat.stack && seat.stack >= 10) pick = C.CHIPS.filter(x => x <= seat.stack).pop() || 10;
+      const chips = el('div', 'chips');
+      C.CHIPS.forEach(x => { const b = el('button', 'chipbtn c' + x + (pick === x ? ' sel' : ''), String(x)); b.disabled = x > seat.stack; b.onclick = () => { pick = x; v.rerender(); }; chips.append(b); });
+      const row = el('div', 'actions');
+      const tot = G.bets[me] ? C.sum(G.bets[me]) : 0;
+      const clr = el('button', 'btn ghost', '지우기'); clr.disabled = !tot; clr.onclick = () => send('clear');
+      const re = el('button', 'btn', '같은 베팅'); re.disabled = !!tot || !G.last[me] || seat.stack < C.sum(G.last[me]); re.onclick = () => send('rebet');
+      const ok = el('button', 'btn primary'); ok.append('베팅 완료', el('small', null, fmt(tot))); ok.disabled = !tot; ok.onclick = () => send('ready');
+      row.append(clr, re, ok);
+      dock.append(chips, row);
+    },
+  };
+  root.HOGames.baccarat = game;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* 섯다: two hwatu cards each, one betting round, best 족보 wins. */
+(function (root) {
+  'use strict';
+  const ANTE = 10;
+  const MONTH = ['', '송학', '매조', '벚꽃', '흑싸리', '난초', '모란', '홍싸리', '공산', '국진', '단풍'];
+  const ICON = ['', '🌲', '🐦', '🌸', '🌿', '🪻', '🌺', '🐗', '🌕', '🍶', '🍁'];
+  const mo = c => parseInt(c, 10);
+  const isA = c => c.endsWith('A');
+  const gwang = c => isA(c) && [1, 3, 8].includes(mo(c));
+  const freshDeck = () => { const d = []; for (let m = 1; m <= 10; m++) d.push(m + 'A', m + 'B'); return d; };
+
+  // base score of two cards + special flags
+  function score(c1, c2) {
+    const a = Math.min(mo(c1), mo(c2)), b = Math.max(mo(c1), mo(c2));
+    const pair = (x, y) => a === x && b === y;
+    if (gwang(c1) && gwang(c2)) return pair(3, 8) ? { s: 1000, name: '38광땡' } : { s: 900, name: a + '' + b + '광땡' };
+    if (a === b) return { s: 800 + a, name: a === 10 ? '장땡' : a + '땡' };
+    if (pair(1, 2)) return { s: 700, name: '알리' };
+    if (pair(1, 4)) return { s: 690, name: '독사' };
+    if (pair(1, 9)) return { s: 680, name: '구삥' };
+    if (pair(1, 10)) return { s: 670, name: '장삥' };
+    if (pair(4, 10)) return { s: 660, name: '장사' };
+    if (pair(4, 6)) return { s: 650, name: '세륙' };
+    const k = (a + b) % 10;
+    const o = { s: 600 + k, name: k === 9 ? '갑오' : k === 0 ? '망통' : k + '끗' };
+    if (pair(3, 7) && isA(c1) && isA(c2)) { o.catcher = true; o.name = '땡잡이'; }
+    if (pair(4, 7) && isA(c1) && isA(c2)) { o.inspector = true; o.name = '암행어사'; }
+    return o;
+  }
+  // scores as they count against a given set of opponents (specials only work against certain hands)
+  function effective(list) {
+    const top = Math.max(...list.map(x => x.s));
+    return list.map(x => (x.catcher && top >= 801 && top <= 809 ? 809.5 : x.inspector && top === 900 ? 950 : x.s));
+  }
+  // ps: {seat: {in, folded}}, scores: {seat: score}; returns {seat: amount won}
+  function splitPots(ps, scores) {
+    const all = Object.keys(ps).map(Number), live = all.filter(i => !ps[i].folded);
+    const levels = [...new Set(live.map(i => ps[i].in))].sort((x, y) => x - y);
+    const won = {}; let prev = 0;
+    for (const L of levels) {
+      const amt = all.reduce((s, i) => s + Math.min(ps[i].in, L) - Math.min(ps[i].in, prev), 0);
+      const elig = live.filter(i => ps[i].in >= L);
+      const eff = effective(elig.map(i => scores[i])), best = Math.max(...eff);
+      const winners = elig.filter((i, k) => eff[k] === best);
+      const share = Math.floor(amt / winners.length);
+      winners.forEach((i, k) => { won[i] = (won[i] || 0) + share + (k === 0 ? amt - share * winners.length : 0); });
+      prev = L;
+    }
+    return won;
+  }
+
+  const eligible = S => S.seats.map((s, i) => (s && s.stack > 0 ? i : -1)).filter(i => i >= 0);
+  const order = G => Object.keys(G.ps).map(Number).sort((x, y) => x - y);
+  function nextToAct(G, from) {
+    const o = order(G), n = o.length, at = o.indexOf(from);
+    for (let k = 1; k <= n; k++) {
+      const i = o[(at + k + n) % n], p = G.ps[i];
+      if (!p.folded && !p.allin && (!p.acted || p.in < G.curBet)) return i;
+    }
+    return -1;
+  }
+  function voidHand(a, why) {
+    const { S, G, now } = a;
+    for (const i of order(G)) if (S.seats[i]) S.seats[i].stack += G.ps[i].in;
+    a.log(`섯다 #${G.no} 무효 — ${why} (판돈 반환)`);
+    G.ps = {}; G.enc = {}; G.shown = {}; G.res = null; G.cur = -1; G.phase = 'idle'; G.nextAt = now + 3000;
+  }
+  function finish(a) {
+    const { S, G, ctx, now } = a;
+    const live = order(G).filter(i => !G.ps[i].folded);
+    const show = live.length > 1;
+    const scores = {}, names = {};
+    live.forEach(i => { const h = (ctx.hands || {})[i]; scores[i] = h ? score(h[0], h[1]) : { s: 0, name: '' }; });
+    const won = splitPots(G.ps, scores);
+    G.shown = {};
+    if (show) live.forEach(i => { G.shown[i] = ctx.hands[i]; names[i] = scores[i].name; });
+    const winners = Object.keys(won).map(Number).filter(i => won[i] > G.ps[i].in || live.length === 1)
+      .map(i => ({ seat: i, net: won[i] - G.ps[i].in }));
+    Object.keys(won).forEach(i => { if (S.seats[i]) S.seats[i].stack += won[i]; });
+    G.res = { winners, names, show, pot: order(G).reduce((s, i) => s + G.ps[i].in, 0) };
+    a.log(`섯다 #${G.no} · ${winners.map(w => `${S.seats[w.seat] ? S.seats[w.seat].name : '?'} +${w.net}${names[w.seat] ? ' (' + names[w.seat] + ')' : ''}`).join(', ')}`);
+    G.phase = 'show'; G.cur = -1; G.nextAt = now + (show ? 8000 : 4000);
+    ctx.hands = {}; ctx.hid = null;
+  }
+  function afterAct(a, i) {
+    const { G, now } = a;
+    const live = order(G).filter(k => !G.ps[k].folded);
+    if (live.length <= 1) return finish(a);
+    const nxt = nextToAct(G, i);
+    if (nxt < 0) return finish(a);
+    G.cur = nxt; G.deadline = now + 30000;
+  }
+  function act(a, i, type) {
+    const { S, G } = a, p = G.ps[i], st = S.seats[i];
+    const need = Math.max(0, G.curBet - p.in);
+    const pay = x => { const y = Math.min(st.stack, Math.max(0, x)); st.stack -= y; p.in += y; if (st.stack === 0) p.allin = true; return y; };
+    if (type === 'die') { p.folded = true; a.log(`${st.name}: 다이`); }
+    else if (type === 'half' && p.raises < 2 && st.stack > need) {
+      const pot = order(G).reduce((s, k) => s + G.ps[k].in, 0);
+      const target = G.curBet + Math.max(ANTE, Math.ceil((pot + need) / 2 / 10) * 10);
+      pay(target - p.in);
+      if (p.in > G.curBet) { G.curBet = p.in; p.raises++; order(G).forEach(k => { if (k !== i) G.ps[k].acted = false; }); }
+      a.log(`${st.name}: ${p.allin ? '올인' : '하프'} ${p.in}`);
+    } else { pay(need); a.log(`${st.name}: ${need ? (p.allin ? '올인 콜' : '콜') : '체크'}`); }
+    p.acted = true;
+    afterAct(a, i);
+  }
+  async function startHand(a) {
+    const { S, G, ctx, now, rint } = a;
+    const el = eligible(S);
+    if (el.length < 2) { G.phase = 'idle'; return; }
+    G.no++; G.hid = G.no + '-' + Math.random().toString(36).slice(2, 8);
+    G.button = el.find(i => i > G.button) ?? el[0];
+    const deck = freshDeck();
+    for (let k = deck.length - 1; k > 0; k--) { const j = rint(k + 1); [deck[k], deck[j]] = [deck[j], deck[k]]; }
+    G.ps = {}; G.enc = {}; G.shown = {}; G.res = null;
+    ctx.hid = G.hid; ctx.hands = {};
+    for (const i of el) {
+      const st = S.seats[i], pay = Math.min(st.stack, ANTE);
+      st.stack -= pay;
+      G.ps[i] = { in: pay, folded: false, allin: st.stack === 0, acted: false, raises: 0 };
+      ctx.hands[i] = [deck.pop(), deck.pop()];
+      G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
+    }
+    G.curBet = ANTE; G.phase = 'bet';
+    a.log(`— 섯다 #${G.no} · 선 ${S.seats[G.button].name}`);
+    const first = nextToAct(G, G.button);
+    if (first < 0) return finish(a);
+    G.cur = first; G.deadline = now + 30000;
+  }
+
+  function hwatu(el, c, cls) {
+    if (!c) return el('div', 'hw back ' + (cls || ''));
+    const m = mo(c);
+    const d = el('div', 'hw m' + m + ' ' + (cls || ''));
+    d.append(el('span', 'hw-n', String(m)), el('span', 'hw-i', ICON[m]), el('span', 'hw-t', MONTH[m]));
+    if (gwang(c)) d.append(el('span', 'hw-g', '光'));
+    else if (isA(c)) d.append(el('span', 'hw-y', '열'));
+    return d;
+  }
+
+  const game = {
+    id: 'seotda', name: '섯다', seats: 5,
+    logic: { score, effective, splitPots, freshDeck },
+    rules: [
+      '화투 1~10월 20장으로 하는 한국식 포커예요. 2장씩 받고, 한 번 베팅한 뒤 족보가 높은 사람이 판돈을 가져가요.',
+      '족보(높은 순): 38광땡 › 광땡(13·18) › 장땡(10·10) › 9땡 … 1땡 › 알리(1·2) › 독사(1·4) › 구삥(1·9) › 장삥(1·10) › 장사(4·10) › 세륙(4·6) › 갑오(9끗) › 8끗 … 1끗 › 망통(0끗).',
+      '끗은 두 장의 월을 더한 끝자리예요 (7월+8월=15 → 5끗).',
+      '특수패: 땡잡이(3월·7월)는 1~9땡을 잡고, 암행어사(4월·7월)는 13·18광땡을 잡아요. 상대가 그 패가 아니면 그냥 끗으로 쳐요.',
+      '다이: 포기 · 콜: 따라가기 · 하프: 판돈의 절반만큼 올리기 (한 판에 두 번까지). 매 판 기본 10칩을 내고 시작해요.',
+    ],
+    init: () => ({ phase: 'idle', started: false, no: 0, hid: null, button: -1, ps: {}, cur: -1, curBet: 0, deadline: 0, nextAt: 0, enc: {}, shown: {}, res: null }),
+    busy: (G, i) => G.phase === 'bet' && !!G.ps[i] && !G.ps[i].folded,
+    async onHost(a) {
+      const { G, ctx } = a;
+      if (G.phase !== 'bet') return;
+      if (ctx.hid !== G.hid || !ctx.hands) return voidHand(a, '진행 기기가 바뀌었어요');
+      for (const i of order(G)) if (ctx.hands[i]) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] });
+    },
+    async onKey(a, i) { const { G, ctx } = a; if (G.phase === 'bet' && ctx.hid === G.hid && ctx.hands[i]) G.enc[i] = await a.seal(i, { hid: G.hid, c: ctx.hands[i] }); },
+    onReq(a, i, r) {
+      const { S, G } = a;
+      if (r.type === 'start') { if (!G.started && eligible(S).length >= 2) { G.started = true; G.nextAt = a.now; a.log('섯다 시작'); } return; }
+      if (G.phase !== 'bet' || G.cur !== i || r.hid !== G.hid) return;
+      if (['die', 'call', 'half'].includes(r.type)) act(a, i, r.type);
+    },
+    onLeave(a, i) {
+      const { G } = a, p = G.ps[i];
+      if (G.phase !== 'bet' || !p || p.folded) return;
+      p.folded = true; p.acted = true;
+      if (G.cur === i || order(G).filter(k => !G.ps[k].folded).length <= 1) afterAct(a, i);
+    },
+    async tick(a) {
+      const { S, G, ctx, now } = a;
+      if (G.phase === 'bet') {
+        if (ctx.hid !== G.hid) return voidHand(a, '카드 정보 없음');
+        if (G.cur < 0 || !G.ps[G.cur] || !S.seats[G.cur]) return afterAct(a, G.cur);
+        if (now > G.deadline) act(a, G.cur, G.ps[G.cur].in >= G.curBet ? 'call' : 'die');
+      } else if (G.started && now >= (G.nextAt || 0)) {
+        if (eligible(S).length >= 2) await startHand(a);
+        else if (G.phase === 'show') { G.phase = 'idle'; }
+      }
+    },
+
+    /* ---------- UI ---------- */
+    render(v) {
+      const { G, S, el, fmt, stage, me } = v;
+      stage.className = 'gstage sd';
+      const felt = el('div', 'gfelt');
+      const live = G.phase === 'bet';
+      const pot = Object.values(G.ps).reduce((s, p) => s + p.in, 0);
+      const winSeats = new Set(G.res ? G.res.winners.map(w => w.seat) : []);
+      const spots = el('div', 'spots');
+      S.seats.forEach((st, i) => {
+        const sp = v.spot(i);
+        const p = G.ps[i];
+        if (st && p) {
+          const box = sp.querySelector('.spot-cards');
+          const mine = i === me && v.secret && v.secret.hid === G.hid ? v.secret.c : null;
+          const cs = G.shown[i] || mine || (p.folded ? null : [null, null]);
+          if (cs) { const row = el('div', 'hwrow'); cs.forEach(c => row.append(hwatu(el, c, p.folded ? 'dim' : ''))); box.append(row); }
+          const tag = el('div', 'gtag');
+          if (G.phase === 'show' && winSeats.has(i)) { const w = G.res.winners.find(x => x.seat === i); tag.textContent = '+' + fmt(w.net); tag.classList.add('good'); sp.classList.add('win'); }
+          else if (p.folded) { tag.textContent = '다이'; tag.classList.add('bad'); }
+          else if (p.allin) { tag.textContent = '올인'; tag.classList.add('good'); }
+          else if (live && p.acted) tag.textContent = p.in > ANTE ? '콜' : '체크';
+          if (tag.textContent) sp.append(tag);
+          if (G.res && G.res.names[i]) sp.append(el('div', 'gtag even', G.res.names[i]));
+          sp.append(v.chip(p.in));
+          if (live && G.cur === i) sp.classList.add('turn');
+        }
+        if (st && G.button === i && (live || G.phase === 'show')) sp.append(el('span', 'sunbtn', '선'));
+        spots.append(sp);
+      });
+      const mid = el('div', 'sd-mid');
+      if (pot) { mid.append(el('small', null, '판돈'), el('b', 'num', fmt(G.res ? G.res.pot : pot))); }
+      const msg = el('div', 'gmsg');
+      if (live) { const s = S.seats[G.cur]; msg.append(el('b', null, G.cur === me ? '내' : (s ? s.name + ' 님' : '')), ' 차례 · ', v.countdown(G.deadline)); }
+      else if (G.phase === 'show' && G.res) {
+        const w = G.res.winners.map(x => (S.seats[x.seat] ? S.seats[x.seat].name : '?')).join(', ');
+        msg.append(el('b', null, w), ' 승리' + (G.res.show && G.res.winners[0] && G.res.names[G.res.winners[0].seat] ? ' · ' + G.res.names[G.res.winners[0].seat] : ''));
+      } else if (!G.started) msg.textContent = eligible(S).length >= 2 ? '누구든 “게임 시작”을 누르면 패를 돌려요' : '2명 이상 앉으면 시작할 수 있어요';
+      else msg.textContent = eligible(S).length >= 2 ? '곧 다음 판을 돌려요' : '상대를 기다리는 중이에요';
+      felt.append(mid, msg, spots);
+      stage.append(felt);
+    },
+    dock(v) {
+      const { G, S, me, seat, el, fmt, dock, send } = v;
+      const p = G.ps[me];
+      const mine = v.secret && v.secret.hid === G.hid ? v.secret.c : (G.shown[me] || null);
+      if (p && (G.phase === 'bet' || G.phase === 'show')) {
+        const row = el('div', 'sd-mine');
+        const cs = el('div', 'hwrow big'); (mine || [null, null]).forEach(c => cs.append(hwatu(el, c, p.folded ? 'dim' : '')));
+        const info = el('div', 'myinfo');
+        info.append(el('div', 'l1', mine ? score(mine[0], mine[1]).name : '패를 여는 중…'), el('div', 'l2', `낸 칩 ${fmt(p.in)}`));
+        row.append(cs, info); dock.append(row);
+      }
+      if (G.phase === 'bet' && G.cur === me) {
+        const need = Math.max(0, G.curBet - p.in), row = el('div', 'actions');
+        const die = el('button', 'btn fold', '다이'); die.onclick = () => send('die', { hid: G.hid });
+        const call = el('button', 'btn call'); call.onclick = () => send('call', { hid: G.hid });
+        if (!need) call.textContent = '체크'; else call.append(need >= seat.stack ? '올인 콜' : '콜', el('small', null, fmt(Math.min(need, seat.stack))));
+        const half = el('button', 'btn raise', '하프'); half.disabled = p.raises >= 2 || seat.stack <= need; half.onclick = () => send('half', { hid: G.hid });
+        row.append(die, call, half); dock.append(row);
+      } else if (!G.started) {
+        const row = el('div', 'actions two');
+        const b = el('button', 'btn primary', '게임 시작'); const n = eligible(S).length;
+        b.disabled = n < 2; if (n < 2) b.append(el('small', null, '2명 이상 필요')); b.onclick = () => send('start');
+        row.append(b, v.inviteButton()); dock.append(row);
+      } else dock.append(v.wait(G.phase === 'bet' ? '다른 플레이어 차례예요' : '다음 판을 기다리는 중'));
+    },
+  };
+  root.HOGames.seotda = game;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* Room kit: everything the table games (blackjack, roulette, baccarat, seotda) share.
+ * Same sync model as the hold'em app (see CLAUDE.md): one device is the dealer/host and is the only
+ * writer of the room state; everyone else writes requests to req/<uid>; a higher epoch takes over.
+ * A game module (src/games/*.js) supplies init / onReq / tick / render / dock. */
+(function () {
+  'use strict';
+  const START = 1000;
+  const AV = ['#dcb05a', '#7fc4a4', '#e48f7a', '#9fb5e6', '#d7a6d9', '#c9d07a', '#f0c9a0', '#8fd3d3'];
+  const SUIT = { s: '♠', h: '♥', d: '♦', c: '♣' };
+  const $ = s => document.querySelector(s);
+  function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  const fmt = n => Math.round(n || 0).toLocaleString('ko-KR');
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const LS = {
+    get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* no storage */ } },
+  };
+  function sess(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } return v; }
+  const rid = () => Math.random().toString(36).slice(2, 10);
+  const TAB = sess('pk_tab') || sess('pk_tab', 't' + rid());
+  const cleanName = s => String(s || '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/g, '').trim().slice(0, 12);
+
+  /* ---- crypto: private cards are sealed to each player's key ---- */
+  const cryptoOK = !!(window.crypto && crypto.subtle && crypto.getRandomValues && window.isSecureContext !== false);
+  const ECDH = { name: 'ECDH', namedCurve: 'P-256' };
+  const b64 = u8 => { let s = ''; for (const b of u8) s += String.fromCharCode(b); return btoa(s); };
+  const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const slimPub = j => (j && typeof j.x === 'string' && typeof j.y === 'string' && j.x.length < 80 && j.y.length < 80 ? { kty: 'EC', crv: 'P-256', x: j.x, y: j.y } : null);
+  async function genKP() {
+    const kp = await crypto.subtle.generateKey(ECDH, true, ['deriveKey']);
+    return { pub: slimPub(await crypto.subtle.exportKey('jwk', kp.publicKey)), privJwk: await crypto.subtle.exportKey('jwk', kp.privateKey), priv: kp.privateKey };
+  }
+  const impPub = j => crypto.subtle.importKey('jwk', slimPub(j), ECDH, false, []);
+  const impPriv = j => crypto.subtle.importKey('jwk', j, ECDH, false, ['deriveKey']);
+  const derive = (priv, pub) => crypto.subtle.deriveKey({ name: 'ECDH', public: pub }, priv, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  async function seal(key, obj) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(obj))));
+    return { iv: b64(iv), ct: b64(ct) };
+  }
+  async function unseal(key, box) {
+    return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(box.iv) }, key, unb64(box.ct))));
+  }
+  function rint(n) {
+    if (!cryptoOK) return Math.floor(Math.random() * n);
+    const a = new Uint32Array(1), lim = Math.floor(4294967296 / n) * n;
+    let x; do { crypto.getRandomValues(a); x = a[0]; } while (x >= lim);
+    return x % n;
+  }
+  async function loadKeys() {
+    if (!cryptoOK) return null;
+    try { const s = LS.get('pk_keys'); if (s && s.pub && s.priv) return { pub: slimPub(s.pub), priv: await impPriv(s.priv) }; } catch (e) { /* regenerate */ }
+    try { const k = await genKP(); LS.set('pk_keys', { pub: k.pub, priv: k.privJwk }); return { pub: k.pub, priv: k.priv }; } catch (e) { return null; }
+  }
+
+  /* ---- state ---- */
+  let game = null, ROOM = '', TABLE = '', REQ = '';
+  let db = null, room = null, ME = null, keys = null;
+  let S = null, loaded = false, connErr = '', lastSeq = null, clockOff = 0, preview = null;
+  let amHost = false, H = null, ctx = {}, ephPriv = null, hostQ = Promise.resolve(), hostSince = 0;
+  let reqDocs = {}, reqUnsub = null, hostTimer = null, writing = false, dirty = false, writeFails = 0;
+  let myReqN = 0, pending = [], inflight = false, pendingSince = 0, creatingJoin = null, keySynced = false;
+  let secret = null, modalKind = null, toastT = 0;
+  const online = { uids: new Set(), tabs: new Set(), peers: [] };
+  const lastSeen = {};
+  let peersReadyAt = 0, hostGoneSince = 0, seen = {};
+
+  const V = () => (amHost ? H : S);
+  const hostNow = () => Date.now() + clockOff;
+  const seatOf = (st, uid) => (st && uid ? st.seats.findIndex(s => s && s.uid === uid) : -1);
+  const mySeat = () => seatOf(V(), ME);
+  const addLog = (st, t) => { st.log.push(t); if (st.log.length > 40) st.log.splice(0, st.log.length - 40); };
+  const denied = e => !!e && (e.code === 'invalid_argument' || e.code === 'permission_denied');
+  const newState = () => ({ v: 1, g: game.id, epoch: 1, hostId: ME, hostTab: TAB, seq: 0, now: 0, seats: new Array(game.seats).fill(null), proc: {}, log: [], epk: null, game: game.init() });
+
+  /* ---- boot ---- */
+  async function start(code, g) {
+    game = g; ROOM = code; TABLE = 'tables/' + ROOM; REQ = TABLE + '/req';
+    $('#gTitle').textContent = game.name;
+    $('#gCode').textContent = ROOM;
+    wire();
+    preview = newState();
+    render();
+    const B = window.HOBackend;
+    if (!B || !B.configured()) { connErr = '아직 서버(Firebase)가 연결되지 않았어요. README 안내대로 firebase-config.js를 채워 주세요.'; render(); return; }
+    let c;
+    try { c = await B.connect(ROOM); } catch (e) {
+      connErr = e && e.code === 'auth_disabled' ? 'Firebase 익명 로그인이 꺼져 있어요. 콘솔 → Authentication → 로그인 방법에서 “익명”을 켜 주세요.' : '서버에 연결할 수 없어요. 인터넷 연결을 확인하고 새로고침해 주세요.';
+      render(); return;
+    }
+    const user = await c.use('user');
+    db = await c.use('db'); room = await c.use('room');
+    ME = await user.id();
+    preview = newState();
+    keys = await loadKeys();
+    db.doc(TABLE).onSnapshot(snap => { loaded = true; connErr = ''; onTable(snap.exists ? snap.data() : null); }, e => {
+      connErr = denied(e) ? '데이터베이스 보안 규칙이 막고 있어요. README의 규칙(database.rules.json)을 게시해 주세요.' : '테이블 연결이 끊겼어요. 페이지를 다시 열어 주세요.';
+      render();
+    });
+    room.onPeers(ch => {
+      online.uids = new Set(); online.tabs = new Set(); online.peers = [];
+      for (const p of ch.peers) {
+        const pr = p.presence || {};
+        if (typeof pr.uid === 'string') online.uids.add(pr.uid);
+        if (typeof pr.tab === 'string') online.tabs.add(pr.tab);
+        online.peers.push({ uid: pr.uid, tab: pr.tab });
+      }
+      if (!peersReadyAt) peersReadyAt = Date.now() + 3000;
+      render();
+    }, () => {});
+    room.presence({ uid: ME, tab: TAB }).catch(() => {});
+    setInterval(clientTick, 1000);
+    setInterval(uiTick, 250);
+    render();
+  }
+
+  function onTable(d) {
+    if (d && d.g !== game.id) { connErr = '이 방 코드는 다른 게임에서 쓰고 있어요. 로비에서 새 방을 만들어 주세요.'; S = null; render(); return; }
+    if (d && lastSeq !== null && d.seq !== lastSeq && d.now && !amHost) { const off = d.now - Date.now(); if (Math.abs(off) < 5 * 60 * 1000) clockOff = off; }
+    if (d) lastSeq = d.seq;
+    S = d;
+    if (d) {
+      const mine = d.hostId === ME && d.hostTab === TAB;
+      if (amHost) { if (!mine) { if ((d.epoch || 0) >= H.epoch) stepDown('다른 기기가 진행을 이어받았어요'); else markDirty(); } }
+      else if (mine) becomeHost(clone(d));
+    } else if (amHost) markDirty();
+    if (!waitingAck() && !pending.length) pendingSince = 0;
+    pump(); syncKey(); openMine(); render();
+  }
+
+  /* ---- host ---- */
+  function api() {
+    return { S: H, get G() { return H.game; }, ctx, now: Date.now(), rint, START, log: t => addLog(H, t), seal: sealFor, online: uid => online.uids.has(uid) };
+  }
+  async function sealFor(i, obj) {
+    const st = H.seats[i];
+    if (ephPriv && st && st.pub) { try { return await seal(await derive(ephPriv, await impPub(st.pub)), obj); } catch (e) { /* fall through */ } }
+    return { p: obj };
+  }
+  function becomeHost(st) {
+    amHost = true; H = st; hostSince = Date.now(); clockOff = 0;
+    const saved = LS.get('hk_ctx');
+    ctx = saved && saved.room === ROOM && saved.c ? saved.c : {};
+    reqDocs = {};
+    if (reqUnsub) reqUnsub();
+    reqUnsub = db.collection(REQ).onSnapshot(qs => { qs.docs.forEach(d => { reqDocs[d.id] = d.data(); }); hostDo(processReqs); }, () => toast('요청 수신이 끊겼어요. 새로고침해 주세요.'));
+    clearInterval(hostTimer);
+    hostTimer = setInterval(() => hostDo(tick), 300);
+    const queued = pending; pending = [];
+    hostDo(async () => {
+      ephPriv = null; H.epk = null;
+      if (cryptoOK) { try { const kp = await genKP(); ephPriv = kp.priv; H.epk = kp.pub; } catch (e) { /* plain fallback */ } }
+      if (game.onHost) await game.onHost(api());
+      for (const r of queued) await applyReq(ME, r);
+    });
+  }
+  function stepDown(msg) {
+    amHost = false; H = null; ctx = {}; ephPriv = null;
+    if (reqUnsub) { reqUnsub(); reqUnsub = null; }
+    clearInterval(hostTimer); hostTimer = null;
+    if (msg) toast(msg);
+    if (creatingJoin && S && seatOf(S, ME) < 0) { const j = creatingJoin; creatingJoin = null; send('join', j); }
+    render();
+  }
+  function hostDo(fn) {
+    hostQ = hostQ.then(async () => {
+      if (!amHost) return;
+      const before = JSON.stringify(H);
+      await fn();
+      if (amHost && JSON.stringify(H) !== before) commit();
+    }).catch(e => console.error(e));
+    return hostQ;
+  }
+  function commit() {
+    H.seq = (H.seq || 0) + 1; H.now = Date.now();
+    LS.set('hk_ctx', { room: ROOM, c: ctx });
+    markDirty(); openMine(); render();
+  }
+  function markDirty() { dirty = true; flush(); }
+  async function flush() {
+    if (writing || !dirty || !amHost) return;
+    writing = true; dirty = false;
+    try { await db.doc(TABLE).set(clone(H)); writeFails = 0; }
+    catch (e) {
+      dirty = true; writeFails++;
+      if (denied(e) && writeFails > 2) stepDown('서버에 쓸 권한이 없어요. 데이터베이스 보안 규칙을 확인해 주세요.');
+      await sleep(600 * Math.min(writeFails, 6));
+    }
+    writing = false;
+    if (dirty && amHost) flush();
+  }
+  async function processReqs() {
+    for (const uid of Object.keys(reqDocs)) {
+      const r = reqDocs[uid];
+      if (!r || typeof r.n !== 'number' || r.n <= (H.proc[uid] || 0)) continue;
+      H.proc[uid] = r.n;
+      if (typeof r.t === 'number' && Date.now() - r.t > 10 * 60 * 1000) continue;
+      try { await applyReq(uid, r); } catch (e) { console.error(e); }
+    }
+  }
+  async function applyReq(uid, r) {
+    const a = api(), i = seatOf(H, uid), st = i >= 0 ? H.seats[i] : null, name = cleanName(r.name);
+    switch (r.type) {
+      case 'join': {
+        if (st) { if (name) st.name = name; if (r.pub) st.pub = slimPub(r.pub); break; }
+        const s = Number.isInteger(r.seat) && r.seat >= 0 && r.seat < H.seats.length && !H.seats[r.seat] ? r.seat : H.seats.findIndex(x => !x);
+        if (s < 0) break;
+        H.seats[s] = { uid, name: name || '플레이어', stack: START, buyin: START, pub: slimPub(r.pub) };
+        addLog(H, `${H.seats[s].name} 님이 앉았어요`);
+        break;
+      }
+      case 'leave': if (st) await removeSeat(a, i); break;
+      case 'rebuy': if (st && st.stack === 0 && !(game.busy && game.busy(H.game, i))) { st.stack += START; st.buyin += START; addLog(H, `${st.name}: 리바이 +${fmt(START)}`); } break;
+      case 'name': if (st && name) st.name = name; break;
+      case 'key': if (st) { st.pub = slimPub(r.pub); if (game.onKey) await game.onKey(a, i); } break;
+      default: if (st) await game.onReq(a, i, r);
+    }
+  }
+  async function removeSeat(a, i) {
+    const st = H.seats[i];
+    if (game.onLeave) await game.onLeave(a, i);
+    addLog(H, `${st.name} 님이 자리를 떠났어요`);
+    H.seats[i] = null;
+  }
+  async function tick() {
+    const a = api();
+    // free seats of people who have been gone for 3 minutes
+    if (peersReadyAt && a.now > peersReadyAt) {
+      for (let i = 0; i < H.seats.length; i++) {
+        const st = H.seats[i]; if (!st) continue;
+        if (online.uids.has(st.uid)) { lastSeen[st.uid] = a.now; continue; }
+        if (a.now - (lastSeen[st.uid] || hostSince) > 180000 && !(game.busy && game.busy(H.game, i))) await removeSeat(a, i);
+      }
+    }
+    await game.tick(a);
+  }
+  function takeOver() {
+    if (amHost || !S) return;
+    const st = clone(S);
+    st.epoch = (st.epoch || 1) + 1; st.hostId = ME; st.hostTab = TAB;
+    hostGoneSince = 0;
+    becomeHost(st);
+    commit();
+  }
+
+  /* ---- client → host requests ---- */
+  function waitingAck() { return !amHost && !!S && myReqN > ((S.proc && S.proc[ME]) || 0); }
+  function send(type, data) {
+    const r = Object.assign({ type }, data || {});
+    if (amHost) { hostDo(() => applyReq(ME, r)); return; }
+    pending.push(r);
+    if (!pendingSince) pendingSince = Date.now();
+    pump();
+  }
+  async function pump() {
+    if (inflight || !pending.length || !S || amHost) return;
+    const proc = (S.proc && S.proc[ME]) || 0;
+    if (myReqN > proc) return;
+    const r = pending.shift(), n = Math.max(myReqN, proc) + 1;
+    inflight = true;
+    try { await db.doc(REQ + '/' + ME).set(Object.assign({}, r, { n, t: Date.now() })); myReqN = n; if (!pendingSince) pendingSince = Date.now(); }
+    catch (e) { if (denied(e)) { pending = []; toast('서버에 쓸 수 없어요. 데이터베이스 보안 규칙을 확인해 주세요.'); } else { pending.unshift(r); setTimeout(pump, 1500); } }
+    inflight = false;
+  }
+  function syncKey() {
+    if (keySynced || !keys || !V()) return;
+    const i = mySeat(); if (i < 0) return;
+    keySynced = true;
+    const pub = V().seats[i].pub;
+    if (!pub || pub.x !== keys.pub.x) send('key', { pub: keys.pub });
+  }
+  async function openMine() {
+    const v = V(), i = mySeat();
+    const box = v && i >= 0 && v.game.enc ? v.game.enc[i] : null;
+    if (!box) { secret = null; return; }
+    const sig = box.iv || 'p' + JSON.stringify(box.p);
+    if (secret && secret.sig === sig) return;
+    const mine = secret = { sig, data: null };
+    if (box.p) { mine.data = box.p; return; }
+    try {
+      if (!keys || !v.epk) throw new Error('no key');
+      const d = await unseal(await derive(keys.priv, await impPub(v.epk)), box);
+      if (secret === mine) { mine.data = d; render(); }
+    } catch (e) { if (keys) send('key', { pub: keys.pub }); }
+  }
+
+  /* ---- takeover when the host device disappears ---- */
+  function clientTick() {
+    if (!S || amHost) { hostGoneSince = 0; renderBanner(); return; }
+    if (peersReadyAt && Date.now() > peersReadyAt && room.connected()) {
+      if (online.tabs.has(S.hostTab)) hostGoneSince = 0; else if (!hostGoneSince) hostGoneSince = Date.now();
+      if (hostGoneSince && Date.now() - hostGoneSince > 4000 && successor() === TAB) takeOver();
+    }
+    renderBanner();
+  }
+  function successor() {
+    const c = online.peers.filter(p => p.tab && p.uid).map(p => { const i = seatOf(S, p.uid); return { tab: p.tab, rank: i >= 0 ? i : 99 }; });
+    c.sort((a, b) => a.rank - b.rank || (a.tab < b.tab ? -1 : 1));
+    return c.length ? c[0].tab : null;
+  }
+
+  /* ---- rendering ---- */
+  function uiTick() {
+    document.querySelectorAll('#gapp .cd').forEach(e => { e.textContent = Math.max(0, Math.ceil((Number(e.dataset.until) - hostNow()) / 1000)) + '초'; });
+  }
+  function cardEl(c, extra) {
+    if (c === undefined) return el('div', 'slot');
+    if (!c) return el('div', 'card back' + (extra ? ' ' + extra : ''));
+    const red = c[1] === 'h' || c[1] === 'd', r = c[0] === 'T' ? '10' : c[0];
+    const d = el('div', 'card' + (red ? ' red' : '') + (extra ? ' ' + extra : ''));
+    d.append(el('span', 'r', r), el('span', 's2', SUIT[c[1]]), el('span', 's', SUIT[c[1]]));
+    return d;
+  }
+  function colorFor(uid) { let x = 0; for (const ch of String(uid)) x = (x * 31 + ch.charCodeAt(0)) >>> 0; return AV[x % AV.length]; }
+  function makeView(v) {
+    const me = seatOf(v, ME);
+    const view = {
+      S: v, G: v.game, me, seat: me >= 0 ? v.seats[me] : null, amHost, secret: secret && secret.data,
+      stage: $('#gStage'), dock: $('#gDock'), el, fmt, send, toast, rerender: render, cardEl,
+      cards(key, arr) {
+        const row = el('div', 'cardrow'), was = seen[key] || 0;
+        arr.forEach((c, k) => { const fresh = c !== undefined && k >= was; const ce = cardEl(c, fresh ? 'deal' : ''); if (fresh) ce.style.setProperty('--d', ((k - was) * 0.12) + 's'); row.append(ce); });
+        if (Object.keys(seen).length > 300) seen = {};
+        seen[key] = arr.filter(c => c !== undefined).length;
+        return row;
+      },
+      countdown(until) { const s = el('span', 'cd num'); s.dataset.until = until; s.textContent = Math.max(0, Math.ceil((until - hostNow()) / 1000)) + '초'; return s; },
+      chip(amt) { const b = el('div', 'gchip'); b.append(el('i'), el('span', 'num', fmt(amt))); return b; },
+      wait(t) { return el('div', 'waitline', t); },
+      sitButton() { const b = el('button', 'btn primary sitbtn', '자리에 앉기'); b.disabled = !loaded || !!connErr || v.seats.every(Boolean); b.onclick = () => openJoin(-1); return b; },
+      inviteButton() { const b = el('button', 'btn', '친구 초대'); b.onclick = () => openModal('invite'); return b; },
+      spot(i) {
+        const st = v.seats[i], sp = el('div', 'spot' + (i === me ? ' me' : '') + (st ? '' : ' empty'));
+        sp.append(el('div', 'spot-cards'));
+        if (!st) {
+          if (me < 0 && loaded && !connErr) { const b = el('button', 'gplate sit', '+ 앉기'); b.onclick = () => openJoin(i); sp.append(b); }
+          else sp.append(el('div', 'gplate', '빈 자리'));
+          return sp;
+        }
+        const plate = el('div', 'gplate'), av = el('i', 'gav', (st.name || '?').slice(0, 1));
+        av.style.background = colorFor(st.uid);
+        if (online.uids.has(st.uid)) av.classList.add('on');
+        const t = el('div', 'gptxt'); t.append(el('span', 'gname', st.name), el('span', 'gstack num', fmt(st.stack)));
+        plate.append(av, t); sp.append(plate);
+        return sp;
+      },
+    };
+    return view;
+  }
+  function render() {
+    if (!game) return;
+    const v = V() || preview;
+    $('#gOnline').hidden = online.uids.size === 0;
+    $('#gOnlineN').textContent = online.uids.size;
+    renderBanner();
+    const view = makeView(v);
+    if (!game.keep) view.stage.textContent = '';
+    game.render(view);
+    const dock = view.dock; dock.textContent = '';
+    if (!loaded && !connErr) { dock.append(view.wait('테이블에 연결하는 중…')); return; }
+    if (connErr && !V()) { dock.append(view.wait('연결되지 않았어요')); return; }
+    if (view.me < 0) {
+      const row = el('div', 'actions two');
+      row.append(view.sitButton(), view.inviteButton());
+      dock.append(el('div', 'gintro', game.rules[0]), row);
+      return;
+    }
+    const st = view.seat, info = el('div', 'gmine');
+    const net = st.stack - st.buyin;
+    info.append(el('b', null, st.name), el('span', null, '내 칩 '), el('b', 'num gold', fmt(st.stack)));
+    if (net) info.append(el('span', 'num ' + (net > 0 ? 'good' : 'bad'), (net > 0 ? '+' : '−') + fmt(Math.abs(net))));
+    dock.append(info);
+    if (st.stack === 0 && !(game.busy && game.busy(v.game, view.me)) && !Object.keys(v.game.bets && v.game.bets[view.me] ? { x: 1 } : {}).length) {
+      const row = el('div', 'actions one'), b = el('button', 'btn primary');
+      b.append('리바이', el('small', null, '+' + fmt(START))); b.onclick = () => send('rebuy');
+      row.append(b); dock.append(row);
+      return;
+    }
+    game.dock(view);
+  }
+  function renderBanner() {
+    const bn = $('#gBanner'), txt = bn.firstElementChild, btn = bn.lastElementChild;
+    let msg = '', action = null;
+    if (connErr) msg = connErr;
+    else if (!amHost && S) {
+      const stuck = waitingAck() && pendingSince && Date.now() - pendingSince > 8000;
+      const gone = hostGoneSince && Date.now() - hostGoneSince > 2500;
+      if (stuck || gone) { msg = '게임을 진행하던 기기가 응답하지 않아요.'; action = takeOver; }
+    }
+    bn.hidden = !msg; txt.textContent = msg; btn.hidden = !action; btn.textContent = '내가 이어서 진행'; btn.onclick = action;
+  }
+
+  /* ---- join / invite / menu ---- */
+  function openJoin(seat) { openModal('join', seat); }
+  function joinAt(seat) {
+    const name = cleanName($('#nameInput') && $('#nameInput').value);
+    if (!name) { toast('닉네임을 입력해 주세요'); return; }
+    LS.set('pk_name', name);
+    closeModal();
+    const r = { name, pub: keys ? keys.pub : null }; if (seat >= 0) r.seat = seat;
+    if (!S) { creatingJoin = r; becomeHost(newState()); hostDo(() => applyReq(ME, Object.assign({ type: 'join' }, r))); return; }
+    send('join', r);
+  }
+  const inviteUrl = () => location.origin + location.pathname + '#' + ROOM;
+  function inviteBlock() {
+    const box = el('div', 'invite'), code = el('div', 'code');
+    code.append(el('small', null, '방 코드'), el('b', null, ROOM));
+    const link = el('input', 'invite-link'); link.readOnly = true; link.value = inviteUrl(); link.setAttribute('aria-label', '초대 링크'); link.onfocus = () => link.select();
+    const row = el('div', 'row'), cp = el('button', 'btn primary', '링크 복사');
+    cp.onclick = async () => {
+      try { await navigator.clipboard.writeText(inviteUrl()); toast('초대 링크를 복사했어요'); return; } catch (e) { /* fallback */ }
+      try { link.focus(); link.select(); if (document.execCommand('copy')) { toast('초대 링크를 복사했어요'); return; } } catch (e) { /* fallback */ }
+      toast('링크를 길게 눌러 복사해 주세요');
+    };
+    row.append(cp);
+    if (navigator.share) { const sh = el('button', 'btn', '공유하기'); sh.onclick = () => navigator.share({ title: 'HO’s Casino', text: `HO’s Casino ${game.name} 한 판! 방 코드 ${ROOM}`, url: inviteUrl() }).catch(() => {}); row.append(sh); }
+    box.append(code, link, row);
+    return box;
+  }
+  function openModal(kind, arg) {
+    modalKind = kind;
+    const m = $('#modal'); m.textContent = ''; $('#modalBack').hidden = false;
+    const close = el('button', 'btn ghost', kind === 'join' ? '취소' : '닫기'); close.onclick = closeModal;
+    if (kind === 'join') {
+      m.append(el('h2', null, `${game.name} 테이블에 앉기`), el('p', null, `칩 ${fmt(START)}개로 시작해요. 친구들이 알아볼 닉네임을 정해 주세요.`));
+      const inp = el('input'); inp.id = 'nameInput'; inp.maxLength = 12; inp.placeholder = '닉네임'; inp.autocomplete = 'nickname'; inp.value = LS.get('pk_name') || '';
+      inp.onkeydown = e => { if (e.key === 'Enter') joinAt(arg); };
+      const row = el('div', 'row'), ok = el('button', 'btn primary', '앉기'); ok.onclick = () => joinAt(arg);
+      row.append(close, ok); m.append(inp, row);
+      setTimeout(() => inp.focus(), 50);
+    } else if (kind === 'invite') {
+      m.append(el('h2', null, '친구 초대하기'), el('p', null, '이 링크를 보내면 친구가 로그인 없이 바로 같은 방에 들어와요.'), inviteBlock(), close);
+    } else if (kind === 'confirm') {
+      m.append(el('h2', null, arg.title), el('p', null, arg.body));
+      const row = el('div', 'row'), ok = el('button', 'btn primary', arg.ok); ok.onclick = () => { closeModal(); arg.fn(); };
+      row.append(close, ok); m.append(row);
+    }
+  }
+  function closeModal() { modalKind = null; $('#modalBack').hidden = true; }
+  function openSheet() {
+    const sh = $('#sheet'); sh.textContent = ''; $('#sheetBack').hidden = false;
+    const v = V() || preview, me = seatOf(v, ME), st = me >= 0 ? v.seats[me] : null;
+    const section = t => el('h3', null, t);
+    sh.append(el('div', 'grab'), el('h2', null, game.name));
+    sh.append(section('게임 방법'));
+    const ul = el('ul', 'rules'); game.rules.forEach(t => ul.append(el('li', null, t))); sh.append(ul);
+    if (st) {
+      sh.append(section('내 자리'));
+      const row = el('div', 'row');
+      const rb = el('button', 'btn', `리바이 +${fmt(START)}`); rb.disabled = st.stack > 0; rb.onclick = () => { send('rebuy'); closeSheet(); };
+      const lv = el('button', 'btn fold', '자리에서 일어나기');
+      lv.onclick = () => { closeSheet(); openModal('confirm', { title: '자리에서 일어날까요?', body: '남은 칩과 진행 중인 베팅은 사라져요.', ok: '일어나기', fn: () => send('leave') }); };
+      row.append(rb, lv); sh.append(row);
+    }
+    sh.append(section('친구 초대하기'), inviteBlock());
+    sh.append(section('점수판'));
+    const list = el('div', 'list');
+    const rows = v.seats.filter(Boolean).map(s => ({ s, net: s.stack - s.buyin })).sort((a, b) => b.net - a.net);
+    if (!rows.length) list.append(el('div', null, '아직 앉은 사람이 없어요'));
+    rows.forEach(r => { const d = el('div'); d.append(el('span', 'grow', r.s.name + (r.s.uid === ME ? ' (나)' : '')), el('span', 'num', fmt(r.s.stack)), el('span', 'num ' + (r.net > 0 ? 'pos' : r.net < 0 ? 'neg' : ''), (r.net > 0 ? '+' : '') + fmt(r.net))); list.append(d); });
+    sh.append(list, section('최근 기록'));
+    const log = el('div', 'log');
+    (v.log || []).slice().reverse().forEach(t => log.append(el('div', null, t)));
+    if (!(v.log || []).length) log.append(el('div', null, '아직 기록이 없어요'));
+    sh.append(log);
+    const lobby = el('button', 'btn', '로비로 나가기'); lobby.style.cssText = 'width:100%;margin-top:16px'; lobby.onclick = () => window.HOMain.lobby();
+    const close = el('button', 'btn ghost', '닫기'); close.style.cssText = 'width:100%;margin-top:8px'; close.onclick = closeSheet;
+    sh.append(lobby, close);
+  }
+  function closeSheet() { $('#sheetBack').hidden = true; }
+  function toast(t) { const x = $('#toast'); x.textContent = t; x.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { x.hidden = true; }, 2800); }
+  function wire() {
+    $('#gMenu').onclick = openSheet;
+    $('#gBack').onclick = () => window.HOMain.lobby();
+    $('#gCode').onclick = () => openModal('invite');
+    $('#sheetBack').addEventListener('click', e => { if (e.target.id === 'sheetBack') closeSheet(); });
+    $('#modalBack').addEventListener('click', e => { if (e.target.id === 'modalBack') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSheet(); } });
+  }
+
+  window.HOKit = { start };
+})();
+
+</script>
+<script>
+/* Entry point: splash → lobby → room. The room code in the URL hash (#ABC123) decides the game:
+ * 6 characters (or any other length) = hold'em, 7 characters starting with a game letter = that game. */
+(function () {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  const LS = {
+    get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* no storage */ } },
+  };
+  function sess(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } return v; }
+
+  const HOLDEM_RULES = [
+    '각자 카드 2장을 받고, 가운데에 깔리는 공용 카드 5장과 합쳐 가장 좋은 5장 족보를 만드는 포커예요.',
+    '프리플랍 → 플랍(3장) → 턴(1장) → 리버(1장) 순서로 네 번 베팅해요.',
+    '체크/콜로 따라가거나, 벳/레이즈로 올리거나, 폴드로 포기할 수 있어요. 끝까지 남은 사람 중 족보가 가장 높으면 팟을 가져가요.',
+    '족보 순서는 게임 안 ☰ 메뉴에서 볼 수 있어요. 봇을 넣어 연습할 수도 있어요.',
+  ];
+  const GAMES = [
+    { id: 'holdem', prefix: '', name: '텍사스 홀덤', mark: '♠', tone: 'green', players: '2~8명 · 봇 가능',
+      desc: '내 카드 2장과 공용 카드 5장으로 족보를 겨루는 포커. 베팅과 블러프의 심리전!' },
+    { id: 'blackjack', prefix: 'B', name: '블랙잭', mark: '21', tone: 'red', players: '1~5명 · 딜러와 대결',
+      desc: '카드 합을 21에 가깝게 만들어 딜러를 이기는 게임. 21을 넘으면 버스트!' },
+    { id: 'roulette', prefix: 'R', name: '룰렛', mark: '0', tone: 'wine', players: '1~8명',
+      desc: '구슬이 멈출 숫자와 색을 맞혀요. 숫자 하나를 정확히 맞히면 35배.' },
+    { id: 'baccarat', prefix: 'K', name: '바카라', mark: '9', tone: 'blue', players: '1~8명',
+      desc: '플레이어와 뱅커 중 9에 더 가까울 쪽에 걸어요. 규칙은 자동, 고르기만 하면 끝.' },
+    { id: 'seotda', prefix: 'S', name: '섯다', mark: '光', tone: 'hwatu', players: '2~5명 · 화투',
+      desc: '화투 2장으로 겨루는 한국식 포커. 38광땡을 잡으면 판을 쓸어요.' },
+  ];
+  const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const normRoom = s => { const c = String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return /^[A-Z0-9]{4,12}$/.test(c) ? c : null; };
+  const hashRoom = () => { try { return normRoom(decodeURIComponent(location.hash.slice(1))); } catch (e) { return null; } };
+  const randCode = n => Array.from({ length: n }, () => CODE_CH[Math.floor(Math.random() * CODE_CH.length)]).join('');
+  const gameOf = code => (code.length === 7 && GAMES.find(g => g.prefix && g.prefix === code[0])) || GAMES[0];
+  const rulesOf = g => (g.id === 'holdem' ? HOLDEM_RULES : window.HOGames[g.id].rules);
+  let CURRENT = null;
+
+  function show(id) { ['splash', 'lobby', 'app', 'gapp'].forEach(x => { $('#' + x).hidden = x !== id; }); }
+  function go(code) { location.hash = code; }               // hashchange → reload into the room
+  function create(g) { go(g.prefix + randCode(6)); }
+  function lobby() {
+    sess('ho_lobby', '1');
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+    location.reload();
+  }
+  function remember(code) {
+    const list = (LS.get('ho_recent') || []).filter(x => x && x.code !== code);
+    list.unshift({ code, t: Date.now() });
+    LS.set('ho_recent', list.slice(0, 4));
+  }
+  function toast(t) { const x = $('#toast'); x.textContent = t; x.hidden = false; setTimeout(() => { x.hidden = true; }, 2600); }
+
+  function showSplash() {
+    show('splash');
+    $('#startBtn').onclick = () => { sess('ho_lobby', '1'); showLobby(); };
+  }
+  function showLobby() {
+    show('lobby');
+    const root = $('#lobbyBody'); root.textContent = '';
+    // join
+    const join = el('section', 'lb-card lb-join');
+    join.append(el('h2', null, '방 참여하기'), el('p', null, '친구가 보내 준 방 코드를 넣으면 그 방으로 바로 들어가요.'));
+    const row = el('div', 'lb-row');
+    const inp = el('input', 'code-input'); inp.id = 'joinCode'; inp.maxLength = 12; inp.placeholder = '방 코드'; inp.autocapitalize = 'characters'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', '방 코드');
+    const enter = () => { const c = normRoom(inp.value); if (!c) { toast('방 코드는 영문·숫자 4~12자예요'); return; } go(c); };
+    inp.onkeydown = e => { if (e.key === 'Enter') enter(); };
+    const btn = el('button', 'btn primary', '입장'); btn.id = 'joinBtn'; btn.onclick = enter;
+    row.append(inp, btn); join.append(row);
+    const recent = (LS.get('ho_recent') || []).filter(x => x && normRoom(x.code));
+    if (recent.length) {
+      const rc = el('div', 'lb-recent'); rc.append(el('small', null, '최근 방'));
+      recent.forEach(x => { const b = el('button', null); b.append(el('b', null, x.code), ' ' + gameOf(x.code).name); b.onclick = () => go(x.code); rc.append(b); });
+      join.append(rc);
+    }
+    // games
+    const head = el('div', 'lb-head'); head.append(el('h2', null, '게임 고르기'), el('p', null, '게임을 골라 방을 만들고, 초대 링크를 친구에게 보내요.'));
+    const list = el('div', 'lb-games');
+    GAMES.forEach(g => {
+      const c = el('article', 'lb-game ' + g.tone); c.dataset.game = g.id;
+      const tile = el('div', 'lb-tile'); tile.append(el('span', null, g.mark));
+      const body = el('div', 'lb-body');
+      const title = el('div', 'lb-title'); title.append(el('h3', null, g.name), el('small', null, g.players));
+      body.append(title, el('p', null, g.desc));
+      const rules = el('ul', 'rules'); rules.hidden = true; rulesOf(g).forEach(t => rules.append(el('li', null, t)));
+      const acts = el('div', 'lb-acts');
+      const how = el('button', 'btn ghost', '게임 방법'); how.onclick = () => { rules.hidden = !rules.hidden; how.textContent = rules.hidden ? '게임 방법' : '접기'; };
+      const mk = el('button', 'btn primary', '방 만들기'); mk.onclick = () => create(g);
+      acts.append(how, mk);
+      c.append(tile, body, rules, acts);
+      list.append(c);
+    });
+    root.append(join, head, list, el('p', 'lb-foot', '실제 돈은 걸지 않아요. 칩은 방마다 1,000개로 시작하고, 다 잃으면 리바이할 수 있어요.'));
+  }
+
+  function boot() {
+    if (window.claude && typeof window.claude.use === 'function') { show('app'); window.startHoldem('main'); return; } // test mock
+    window.addEventListener('hashchange', () => { if (hashRoom() !== CURRENT) location.reload(); });
+    const code = hashRoom();
+    if (!code) { if (sess('ho_lobby')) showLobby(); else showSplash(); return; }
+    CURRENT = code;
+    if (location.hash !== '#' + code) { try { history.replaceState(null, '', location.pathname + location.search + '#' + code); } catch (e) { /* ignore */ } }
+    remember(code);
+    sess('ho_lobby', '1');
+    const g = gameOf(code);
+    document.title = g.name + ' · HO’s Casino';
+    if (g.id === 'holdem') { show('app'); window.startHoldem(code); }
+    else { show('gapp'); window.HOKit.start(code, window.HOGames[g.id]); }
+  }
+  window.HOMain = { lobby, GAMES, gameOf };
+  boot();
 })();
 
 </script>
