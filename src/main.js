@@ -1,4 +1,5 @@
 /* Entry point: splash → lobby → room. The room code in the URL hash (#ABC123) decides the game:
+ * (B 블랙잭, R 룰렛, K 바카라, S 섯다, T 술래잡기)
  * 6 characters (or any other length) = hold'em, 7 characters starting with a game letter = that game. */
 (function () {
   'use strict';
@@ -27,6 +28,8 @@
       desc: '플레이어와 뱅커 중 9에 더 가까울 쪽에 걸어요. 규칙은 자동, 고르기만 하면 끝.' },
     { id: 'seotda', prefix: 'S', name: '섯다', mark: '光', tone: 'hwatu', players: '혼자도 OK · 봇 가능',
       desc: '화투 2장으로 겨루는 한국식 포커. 38광땡을 잡으면 판을 쓸어요.' },
+    { id: 'tag', prefix: 'T', name: '술래잡기', mark: '술래', tone: 'chase', players: '2~8명 · 봇 가능',
+      desc: '맵을 뛰어다니며 쫓고 쫓기는 실시간 게임. 술래에게 닿으면 내가 술래! 얼음땡 모드도 있어요.' },
   ];
   const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const normRoom = s => { const c = String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return /^[A-Z0-9]{4,12}$/.test(c) ? c : null; };
@@ -90,7 +93,7 @@
       c.append(tile, body, rules, acts);
       list.append(c);
     });
-    root.append(join, head, list, el('p', 'lb-foot', '실제 돈은 걸지 않아요. 칩은 방마다 1,000개로 시작하고, 다 잃으면 리바이할 수 있어요.'));
+    root.append(join, head, list, el('p', 'lb-foot', '실제 돈은 걸지 않아요. 칩은 방마다 1,000개로 시작하고, 다 잃으면 리바이할 수 있어요. 술래잡기는 칩 없이 1등 횟수로 겨뤄요.'));
   }
 
   function boot() {

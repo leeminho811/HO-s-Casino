@@ -80,7 +80,7 @@ try {
   ok(!(await A.page.locator('#lobby').isVisible()), 'lobby hidden behind the splash');
   await shot(A, '10-splash');
   await A.page.locator('#startBtn').click();
-  ok(await A.page.locator('#lobby').isVisible() && (await A.page.locator('.lb-game').count()) === 5, 'START opens the lobby with 5 games');
+  ok(await A.page.locator('#lobby').isVisible() && (await A.page.locator('.lb-game').count()) === 6, 'START opens the lobby with 6 games');
   ok((await A.page.locator('.lb-game .lb-body p').allInnerTexts()).every(t => t.length > 15), 'every game has a description');
   await A.page.locator('.lb-game[data-game="seotda"] .btn.ghost').click();
   ok(await A.page.locator('.lb-game[data-game="seotda"] .rules').isVisible(), '“게임 방법” expands the rules');

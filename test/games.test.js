@@ -1,6 +1,6 @@
 // Logic tests for the table games: node test/games.test.js
 const path = require('path');
-['common', 'blackjack', 'roulette', 'baccarat', 'seotda'].forEach(f => require(path.join(__dirname, '../src/games', f + '.js')));
+['common', 'blackjack', 'roulette', 'baccarat', 'seotda', 'tag'].forEach(f => require(path.join(__dirname, '../src/games', f + '.js')));
 const G = globalThis.HOGames;
 let fails = 0;
 function ok(cond, name) { if (cond) console.log('ok  ', name); else { console.log('FAIL', name); fails++; } }
@@ -130,6 +130,99 @@ const houseBet = keys => (S, g, i, r) => {
     S.seats[0] = { uid: 'u0', name: 'P0', stack: 1000, buyin: 1000 }; S.seats[1] = { uid: 'bot_1', name: '봇 1호', stack: 1000, buyin: 1000, bot: true };
     const a = { S, get G() { return S.game; }, ctx: {}, now: 1e6, rint, log: () => {}, seal: async (i, o) => ({ p: o }) };
     ok(game.bot(a, 1) === null, `${id}: bot waits until a person bets`);
+  }
+
+  // ---- 술래잡기 (tag)
+  {
+    const tg = G.tag, L = tg.logic, pos = {}, onl = new Set(['u0', 'u1', 'u2', 'u3']);
+    L.setWhere(i => pos[i] || null);
+    let clock = 5e6;
+    const table = n => ({ seats: Array.from({ length: 8 }, (_, i) => (i < n ? { uid: 'u' + i, name: 'P' + i, stack: 1000, buyin: 1000 } : null)), log: [], game: tg.init() });
+    const at = S => ({ S, get G() { return S.game; }, ctx: {}, now: clock, rint: () => 0, log: t => S.log.push(t), online: u => onl.has(u) });
+    const req = (S, i, r) => tg.onReq(at(S), i, r);
+    const tick = S => tg.tick(at(S));
+    ok(L.MAPS.every(m => m.sp.every(([x, y]) => L.free(m, x, y)) && L.free(m, m.it[0], m.it[1])), 'tag: every spawn point is clear of obstacles on every map');
+    ok(L.MAPS.every(m => m.sp.length >= 7), 'tag: enough spawn points for 8 players');
+    const hedge = L.MAPS[0], q = L.move(hedge, { x: 350, y: 440 }, 300, 0);
+    ok(q.x <= 380 - L.R + 0.01, 'tag: a fast move does not tunnel through a thin hedge (x=' + q.x.toFixed(1) + ')');
+    const inside = L.push(hedge, { x: 600, y: 600 });
+    ok(Math.hypot(inside.x - 600, inside.y - 600) >= 85 + L.R - 0.01, 'tag: a runner inside the fountain is pushed out');
+    ok(L.push(hedge, { x: -50, y: 5000 }).x === L.R && L.push(hedge, { x: -50, y: 5000 }).y === L.H - L.R, 'tag: the fence keeps runners in');
+
+    let S = table(1); req(S, 0, { type: 'start' });
+    ok(S.game.phase === 'wait', 'tag: one player cannot start');
+    S = table(3);
+    req(S, 0, { type: 'opt', mode: 'constructor', dur: 45 });
+    eq([S.game.opt.mode, S.game.opt.dur], ['tag', 90], 'tag: bad options are ignored');
+    req(S, 0, { type: 'start' });
+    const g = S.game;
+    ok(g.phase === 'count' && Object.keys(g.pl).length === 3 && g.it === 0 && g.map === 1 && g.ev.k === 'start', 'tag: round starts with a countdown and an "it"');
+    ok([0, 1, 2].every(i => Array.isArray(g.sp[i])) && new Set([0, 1, 2].map(i => g.sp[i].join())).size === 3, 'tag: everyone gets their own spawn point');
+    ok(!L.canMove(g, 0, clock) && L.canMove(g, 1, clock), 'tag: during the countdown only the runners move');
+    pos[0] = { x: 100, y: 100 }; pos[1] = { x: 100 + L.REACH + L.SLACK + 5, y: 100 }; pos[2] = { x: 900, y: 900 };
+    req(S, 0, { type: 'tag', s: 1 });
+    ok(g.it === 0, 'tag: no tagging during the countdown');
+    clock += L.COUNT_MS; tick(S);
+    ok(g.phase === 'play' && g.since === clock && g.end === clock + 90000 && g.ev.k === 'go', 'tag: countdown → play');
+    clock += 4000;
+    req(S, 0, { type: 'tag', s: 1 });
+    ok(g.it === 0, 'tag: too far away (beyond the lag allowance) is not a tag');
+    pos[1] = { x: 150, y: 100 };
+    req(S, 2, { type: 'tag', s: 1 });
+    ok(g.it === 0, 'tag: only "it" can tag');
+    req(S, 0, { type: 'tag', s: 1 });
+    ok(g.it === 1 && g.tags[0] === 1 && S.seats[0].c === 1 && g.ms[0] === 4000 && g.ev.k === 'tag' && g.ev.a === 1 && g.ev.b === 0, 'tag: touch passes "it" and counts the catch');
+    ok(!L.canMove(g, 1, clock) && g.safe[0] > clock, 'tag: the new "it" waits a moment, the old one cannot be tagged straight back');
+    clock += 500; req(S, 1, { type: 'tag', s: 0 });
+    ok(g.it === 1, 'tag: no tagging while stunned');
+    clock += L.STUN_MS; req(S, 1, { type: 'tag', s: 0 });
+    ok(g.it === 1, 'tag: no tag-back while the old "it" is protected');
+    pos[2] = { x: 160, y: 120 }; req(S, 1, { type: 'tag', s: 2 });
+    ok(g.it === 2 && g.ms[1] === 500 + L.STUN_MS, 'tag: "it" time adds up');
+    const hit = (pos[0] = { x: 170, y: 120 }, clock += L.STUN_MS, L.findContact(g, clock, () => true, L.REACH));
+    ok(hit && hit.k === 'tag' && hit.a === 2 && hit.b === 0, 'tag: the host sees bodies touching');
+    clock = g.end; tick(S);
+    ok(g.phase === 'over' && g.res.length === 3, 'tag: time up → results');
+    eq(g.res.map(r => [r.s, r.ms, r.win]), [[0, 4000, true], [1, 2000, false], [2, g.res[2].ms, false]].sort((x, y) => x[1] - y[1]).map((r, k) => [r[0], r[1], k === 0]), 'tag: ranked by time spent as "it"');
+    ok(S.seats[g.res[0].s].w === 1 && !S.seats[g.res[2].s].w, 'tag: the winner gets a win');
+    clock += 9000; tick(S);
+    ok(g.phase === 'wait' && g.it === -1, 'tag: results → back to waiting');
+
+    // 얼음땡
+    S = table(3); const h = S.game;
+    req(S, 1, { type: 'opt', mode: 'ice', dur: 30 });
+    eq([h.opt.mode, h.opt.dur], ['ice', 30], 'ice: mode and length can be changed while waiting');
+    req(S, 0, { type: 'start' }); clock += L.COUNT_MS; tick(S);
+    pos[0] = { x: 100, y: 100 }; pos[1] = { x: 130, y: 100 }; pos[2] = { x: 900, y: 900 };
+    req(S, 0, { type: 'ice' });
+    ok(h.ice[0] == null, 'ice: "it" cannot freeze');
+    req(S, 1, { type: 'ice' });
+    ok(h.ice[1] === clock && h.ev.k === 'ice', 'ice: a runner freezes');
+    ok(!L.canMove(h, 1, clock), 'ice: frozen runners cannot move');
+    req(S, 0, { type: 'tag', s: 1 });
+    ok(h.it === 0, 'ice: frozen runners cannot be tagged');
+    req(S, 2, { type: 'thaw', s: 1 });
+    ok(h.ice[1] != null, 'ice: thawing needs a touch');
+    pos[2] = { x: 150, y: 130 }; req(S, 2, { type: 'thaw', s: 1 });
+    ok(h.ice[1] == null && h.ev.k === 'thaw', 'ice: a free runner thaws a frozen one (땡)');
+    req(S, 1, { type: 'ice' }); clock += 100; req(S, 2, { type: 'ice' });
+    ok(h.it === 2 && Object.keys(h.ice).length === 0 && h.ev.k === 'all' && h.ev.b === 0, 'ice: all frozen → the last to freeze is "it" and everyone thaws');
+
+    // leaving and dropping out
+    S = table(3); const k = S.game;
+    req(S, 0, { type: 'start' }); clock += L.COUNT_MS; tick(S);
+    const leave = i => { tg.onLeave(at(S), i); S.seats[i] = null; };
+    leave(0);
+    ok(k.it !== 0 && k.pl[k.it] && k.ev.k === 'pass' && k.phase === 'play', '"it" leaving passes it on');
+    leave(k.it);
+    ok(k.phase === 'over' && k.res.length === 1, 'fewer than two left → the round ends');
+    S = table(3); const o = S.game;
+    req(S, 0, { type: 'start' }); clock += L.COUNT_MS; tick(S);
+    onl.delete('u0'); tick(S);
+    ok(o.it === 0, 'a short drop-out keeps "it" for a moment');
+    clock += 3500; tick(S);
+    ok(o.it !== 0 && o.ev.k === 'pass', '"it" whose device is gone hands over');
+    onl.add('u0');
   }
   console.log(fails ? `\n${fails} FAILED` : '\nall passed');
   process.exit(fails ? 1 : 0);

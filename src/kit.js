@@ -1,4 +1,4 @@
-/* Room kit: everything the table games (blackjack, roulette, baccarat, seotda) share.
+/* Room kit: everything the kit games (blackjack, roulette, baccarat, seotda, tag) share.
  * Same sync model as the hold'em app (see CLAUDE.md): one device is the dealer/host and is the only
  * writer of the room state; everyone else writes requests to req/<uid>; a higher epoch takes over.
  * A game module (src/games/*.js) supplies init / onReq / tick / render / dock. */
@@ -98,6 +98,7 @@
       connErr = denied(e) ? '데이터베이스 보안 규칙이 막고 있어요. README의 규칙(database.rules.json)을 게시해 주세요.' : '테이블 연결이 끊겼어요. 페이지를 다시 열어 주세요.';
       render();
     });
+    let peerSig = null;
     room.onPeers(ch => {
       online.uids = new Set(); online.tabs = new Set(); online.peers = [];
       for (const p of ch.peers) {
@@ -107,7 +108,9 @@
         online.peers.push({ uid: pr.uid, tab: pr.tab });
       }
       if (!peersReadyAt) peersReadyAt = Date.now() + 3000;
-      render();
+      if (game.onPeers) game.onPeers(ch.peers);   // real-time games keep positions in presence
+      const sig = [...online.tabs].sort().join() + '|' + [...online.uids].sort().join();
+      if (sig !== peerSig) { peerSig = sig; render(); }
     }, () => {});
     room.presence({ uid: ME, tab: TAB }).catch(() => {});
     setInterval(clientTick, 1000);
@@ -345,6 +348,10 @@
     const view = {
       S: v, G: v.game, me, seat: me >= 0 ? v.seats[me] : null, amHost, secret: secret && secret.data,
       stage: $('#gStage'), dock: $('#gDock'), el, fmt, send, toast, rerender: render, cardEl,
+      // for real-time games (술래잡기): host clock, who is online, presence updates, host-side changes
+      uid: ME, now: hostNow, isHost: () => amHost, isOnline: uid => online.uids.has(uid),
+      publish: g => (room ? room.presence({ g }) : Promise.resolve()),
+      host: fn => (amHost ? hostDo(() => fn(api())) : null),
       cards(key, arr) {
         const row = el('div', 'cardrow'), was = seen[key] || 0;
         arr.forEach((c, k) => { const fresh = c !== undefined && k >= was; const ce = cardEl(c, fresh ? 'deal' : ''); if (fresh) ce.style.setProperty('--d', ((k - was) * 0.12) + 's'); row.append(ce); });
@@ -355,7 +362,7 @@
       countdown(until) { const s = el('span', 'cd num'); s.dataset.until = until; s.textContent = Math.max(0, Math.ceil((until - hostNow()) / 1000)) + '초'; return s; },
       chip(amt) { const b = el('div', 'gchip'); b.append(el('i'), el('span', 'num', fmt(amt))); return b; },
       wait(t) { return el('div', 'waitline', t); },
-      sitButton() { const b = el('button', 'btn primary sitbtn', '자리에 앉기'); b.disabled = !loaded || !!connErr || v.seats.every(Boolean); b.onclick = () => openJoin(-1); return b; },
+      sitButton() { const b = el('button', 'btn primary sitbtn', game.sitLabel || '자리에 앉기'); b.disabled = !loaded || !!connErr || v.seats.every(Boolean); b.onclick = () => openJoin(-1); return b; },
       inviteButton() { const b = el('button', 'btn', '친구 초대'); b.onclick = () => openModal('invite'); return b; },
       botButton() { const b = el('button', 'btn', '봇 추가'); b.disabled = me < 0 || v.seats.every(Boolean); b.onclick = () => { send('addBot'); toast('봇을 앉혔어요'); }; return b; },
       spot(i) {
@@ -394,6 +401,7 @@
       dock.append(el('div', 'gintro', game.rules[0]), row);
       return;
     }
+    if (game.noChips) { game.dock(view); return; }
     const st = view.seat, info = el('div', 'gmine');
     const net = st.stack - st.buyin;
     info.append(el('b', null, st.name), el('span', null, '내 칩 '), el('b', 'num gold', fmt(st.stack)));
@@ -456,10 +464,10 @@
     const m = $('#modal'); m.textContent = ''; $('#modalBack').hidden = false;
     const close = el('button', 'btn ghost', kind === 'join' ? '취소' : '닫기'); close.onclick = closeModal;
     if (kind === 'join') {
-      m.append(el('h2', null, `${game.name} 테이블에 앉기`), el('p', null, `칩 ${fmt(START)}개로 시작해요. 친구들이 알아볼 닉네임을 정해 주세요.`));
+      m.append(el('h2', null, game.joinTitle || `${game.name} 테이블에 앉기`), el('p', null, game.joinNote || `칩 ${fmt(START)}개로 시작해요. 친구들이 알아볼 닉네임을 정해 주세요.`));
       const inp = el('input'); inp.id = 'nameInput'; inp.maxLength = 12; inp.placeholder = '닉네임'; inp.autocomplete = 'nickname'; inp.value = LS.get('pk_name') || '';
       inp.onkeydown = e => { if (e.key === 'Enter') joinAt(arg); };
-      const row = el('div', 'row'), ok = el('button', 'btn primary', '앉기'); ok.onclick = () => joinAt(arg);
+      const row = el('div', 'row'), ok = el('button', 'btn primary', game.noChips ? '들어가기' : '앉기'); ok.onclick = () => joinAt(arg);
       row.append(close, ok); m.append(inp, row);
       setTimeout(() => inp.focus(), 50);
     } else if (kind === 'invite') {
@@ -483,8 +491,9 @@
       const row = el('div', 'row');
       const rb = el('button', 'btn', `리바이 +${fmt(START)}`); rb.disabled = st.stack > 0; rb.onclick = () => { send('rebuy'); closeSheet(); };
       const lv = el('button', 'btn fold', '자리에서 일어나기');
-      lv.onclick = () => { closeSheet(); openModal('confirm', { title: '자리에서 일어날까요?', body: '남은 칩과 진행 중인 베팅은 사라져요.', ok: '일어나기', fn: () => send('leave') }); };
-      row.append(rb, lv); sh.append(row);
+      lv.onclick = () => { closeSheet(); openModal('confirm', { title: '자리에서 일어날까요?', body: game.leaveNote || '남은 칩과 진행 중인 베팅은 사라져요.', ok: '일어나기', fn: () => send('leave') }); };
+      if (!game.noChips) row.append(rb);
+      row.append(lv); sh.append(row);
     }
     if (st) {
       const bots = v.seats.filter(x => x && x.bot).length;
@@ -499,7 +508,8 @@
     const list = el('div', 'list');
     const rows = v.seats.filter(Boolean).map(s => ({ s, net: s.stack - s.buyin })).sort((a, b) => b.net - a.net);
     if (!rows.length) list.append(el('div', null, '아직 앉은 사람이 없어요'));
-    rows.forEach(r => { const d = el('div'); d.append(el('span', 'grow', r.s.name + (r.s.uid === ME ? ' (나)' : '')), el('span', 'num', fmt(r.s.stack)), el('span', 'num ' + (r.net > 0 ? 'pos' : r.net < 0 ? 'neg' : ''), (r.net > 0 ? '+' : '') + fmt(r.net))); list.append(d); });
+    if (game.scores) game.scores(makeView(v)).forEach(r => { const d = el('div'); d.append(el('span', 'grow', r.name + (r.me ? ' (나)' : ''))); r.cols.forEach(c => d.append(el('span', 'num', c))); list.append(d); });
+    else rows.forEach(r => { const d = el('div'); d.append(el('span', 'grow', r.s.name + (r.s.uid === ME ? ' (나)' : '')), el('span', 'num', fmt(r.s.stack)), el('span', 'num ' + (r.net > 0 ? 'pos' : r.net < 0 ? 'neg' : ''), (r.net > 0 ? '+' : '') + fmt(r.net))); list.append(d); });
     sh.append(list, section('최근 기록'));
     const log = el('div', 'log');
     (v.log || []).slice().reverse().forEach(t => log.append(el('div', null, t)));

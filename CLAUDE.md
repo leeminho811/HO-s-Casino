@@ -1,6 +1,6 @@
 # HO’s Casino — 친구들과 하는 온라인 카지노
 
-친구들이 같은 링크로 접속해 함께 노는 웹 게임 모음: 텍사스 홀덤, 블랙잭, 룰렛, 바카라, 섯다(화투).
+친구들이 같은 링크로 접속해 함께 노는 웹 게임 모음: 텍사스 홀덤, 블랙잭, 룰렛, 바카라, 섯다(화투), 술래잡기(실시간).
 원래 claude.ai 아티팩트(홀덤 나이트)였고, 지금은 **로그인 없이 링크만으로 들어오는 독립 웹사이트**다.
 실시간 백엔드: Firebase (익명 인증 + Realtime Database, 프로젝트 `ho-casino`), 호스팅: GitHub Pages (`main` 브랜치 루트의 index.html,
 https://leeminho811.github.io/HO-s-Casino/). 사용자용 안내는 README.md.
@@ -14,6 +14,7 @@ src/app.js               홀덤 UI + 동기화. main.js 가 window.startHoldem(�
 src/kit.js               나머지 게임이 함께 쓰는 방 시스템: 호스트 권한 동기화, 자리/리바이, 초대, 메뉴, 패 암호화
 src/games/common.js      공용 도우미 (칩 단위, 카드 뽑기, 베팅 마감 판단)
 src/games/blackjack.js roulette.js baccarat.js seotda.js   게임 모듈 (로직 + render/dock). Node 에서도 로드됨
+src/games/tag.js         술래잡기: 실시간 캔버스 게임 (위치는 presence 로, 판 상태만 방 문서로 — 아래 설명)
 src/backend-firebase.js  Firebase 어댑터 — claude.ai 런타임과 같은 {db, user, room} 모양을 돌려줌
 src/app.css, kit.css     스타일 (모바일 우선). kit.css = 시작 화면·로비·kit 게임들
 src/shell.html           HTML 뼈대 — build.py 가 CSS/JS 를 끼워 넣음
@@ -24,6 +25,7 @@ firebase.json            에뮬레이터 설정 (테스트용)
 test/engine.test.js, games.test.js   규칙 테스트 (npm test)
 test/e2e-firebase.mjs    에뮬레이터 + 브라우저 3개 홀덤 플레이 테스트
 test/e2e-games.mjs       에뮬레이터 + 시작 화면/로비/블랙잭/룰렛/바카라/섯다 테스트
+test/e2e-tag.mjs         에뮬레이터 + 술래잡기 (키보드·터치 이동, 양쪽 기기에서 터치, 봇, 얼음땡, 호스트 교체)
 test/mock.js, harness.html, run.py   메모리 목(mock) 으로 하는 홀덤 시뮬레이션 (window.claude 주입)
 ```
 
@@ -36,7 +38,7 @@ node_modules/firebase 의 같은 버전 파일로 바꿔 치기하므로 package
 ## 방 코드와 게임
 
 - URL 해시 `#CODE` 가 방. 해시가 없으면 시작 화면 → 로비 (이번 탭에서 한 번 봤으면 sessionStorage `ho_lobby` 로 바로 로비).
-- 코드가 **7자이고 첫 글자가 게임 글자**면 그 게임: `B` 블랙잭, `R` 룰렛, `K` 바카라, `S` 섯다. 그 밖의 코드(6자 등)는 홀덤.
+- 코드가 **7자이고 첫 글자가 게임 글자**면 그 게임: `B` 블랙잭, `R` 룰렛, `K` 바카라, `S` 섯다, `T` 술래잡기. 그 밖의 코드(6자 등)는 홀덤.
   (보안 규칙을 안 바꾸고 게임 종류를 코드에 담기 위한 방식. 새 게임을 넣으면 main.js 의 GAMES 에 글자를 추가.)
 - 방을 옮길 때는 해시를 바꾸고 페이지를 새로 읽는다 (상태를 깨끗이 버리려고).
 - 칩은 방마다 따로 (1,000 시작, 0 이 되면 리바이). 게임 사이 공용 지갑은 없음.
@@ -52,7 +54,21 @@ node_modules/firebase 의 같은 버전 파일로 바꿔 치기하므로 package
   0.7~2.2초 뒤에 `onReq` 로 적용(kit.js driveBots). 봇은 칩이 0이면 자동 리바이, 접속 끊김으로 쫓겨나지 않음.
   블랙잭·룰렛·바카라 봇은 사람이 그 판에 베팅해야 따라 베팅(봇끼리만 도는 판 없음). 섯다는 칩 있는 사람이 있어야 패를 돌림.
   섯다 봇의 패는 공유 상태에 안 올림(호스트 ctx 에만).
-- CSS 클래스 이름이 app.css(홀덤)와 겹치지 않게 주의 (`.mine`, `.plate`, `.av` 등은 홀덤 것).
+- CSS 클래스 이름이 app.css(홀덤)와 겹치지 않게 주의 (`.mine`, `.plate`, `.av`, `.tag` 등은 홀덤 것 — 그래서 로비 카드 색은 `chase`).
+- 칩이 없는 게임은 `noChips: true` (+ `sitLabel`, `joinTitle`, `joinNote`, `leaveNote`, `scores(v)`) → kit 가 칩·리바이 UI 를 빼고 dock 전체를 게임에 맡김.
+
+## 술래잡기 (src/games/tag.js) — 실시간
+
+- 움직임은 방 문서를 거치지 않는다. 각 기기가 자기 캐릭터를 직접 움직이고 `{x,y,vx,vy}` 를 **자기 presence 의 `g` 필드**로
+  0.1초마다(바뀔 때만, 미확인 쓰기 3개까지) 올린다. 호스트 기기는 봇도 움직여 `g.b` 에 같이 올린다. 보안 규칙 변경 없음.
+  kit: `game.onPeers(peers)` 로 모든 presence 를 받고, 접속자 목록이 바뀔 때만 다시 그린다. backend: onDisconnect 는 연결당 한 번만 건다.
+- 다른 사람은 받은 위치를 최대 0.12초 외삽 + 부드럽게 따라가며 그린다. 맵 1200×1200, 반지름 20, 벽 충돌은 클라이언트가 처리.
+- 방 문서(`G`)에는 이산적인 것만: phase(wait→count→play→over), 술래 `it`, 얼음 `ice`, 기절 `stun`, 보호 `safe`, 술래 시간 `ms`, 스폰 `sp`, 마지막 사건 `ev`.
+  시간은 호스트 시계(`v.now()` = hostNow).
+- 터치 판정: 술래 기기가 자기 화면에서 닿았다고 보면 `tag` 요청 → 호스트가 자기 시야 기준 거리 40+80(지연 여유) 안이면 인정.
+  호스트도 매 프레임 직접 판정(봇, 대비책). 얼음땡의 `thaw`(땡)도 같은 방식.
+- 연결이 3초 넘게 끊긴 참가자는 빠진 것으로 보고 술래면 넘김. 판 도중 들어온 사람은 다음 판부터.
+- kit 의 view 추가분: `uid`, `now()`, `isHost()`, `isOnline(uid)`, `publish(g)`, `host(fn)`(호스트일 때 fn(api) 를 hostDo 로).
 
 ## 동기화 설계 (바꾸지 말 것)
 

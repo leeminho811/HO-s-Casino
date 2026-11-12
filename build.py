@@ -4,7 +4,7 @@ import pathlib
 d = pathlib.Path(__file__).parent
 src = d / 'src'
 read = lambda *names: '\n'.join((src / n).read_text(encoding='utf-8') for n in names)
-GAMES = ['games/common.js', 'games/blackjack.js', 'games/roulette.js', 'games/baccarat.js', 'games/seotda.js']
+GAMES = ['games/common.js', 'games/blackjack.js', 'games/roulette.js', 'games/baccarat.js', 'games/seotda.js', 'games/tag.js']
 s = (src / 'shell.html').read_text(encoding='utf-8')
 for mark, text in [
     ('/*CSS*/', read('app.css', 'kit.css')),

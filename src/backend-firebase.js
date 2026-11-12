@@ -112,24 +112,26 @@
 
     // ---- presence + reactions ----
     const base = 'rooms/' + room;
-    let tab = null, mine = {}, connected = false, offset = 0, myRef = null;
+    let tab = null, mine = {}, connected = false, offset = 0, myRef = null, armed = null;
     const serverNow = () => Date.now() + offset;
     onValue(ref(rdb, '.info/serverTimeOffset'), s => { offset = Number(s.val()) || 0; });
+    // presence can be written often (술래잡기 sends positions ~10×/s): arm onDisconnect once per connection
     async function announce() {
       if (!myRef || !connected) return;
+      const r = myRef;
       try {
-        await onDisconnect(myRef).remove();
-        await set(myRef, { by: uid, p: JSON.stringify(mine), t: serverTimestamp() });
+        if (armed !== r) { armed = r; try { await onDisconnect(r).remove(); } catch (e) { armed = null; throw e; } }
+        await set(r, { by: uid, p: JSON.stringify(mine), t: serverTimestamp() });
       } catch (e) { console.warn('presence', e); }
     }
-    onValue(ref(rdb, '.info/connected'), s => { connected = s.val() === true; if (connected) announce(); });
+    onValue(ref(rdb, '.info/connected'), s => { connected = s.val() === true; armed = null; if (connected) announce(); });
 
     const roomApi = {
       connected: () => connected,
       async presence(patch) {
         mine = Object.assign({}, mine, patch);
         const t = typeof mine.tab === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(mine.tab) ? mine.tab : (tab || 'p' + Math.random().toString(36).slice(2, 10));
-        if (t !== tab) { if (myRef) { onDisconnect(myRef).cancel().catch(() => {}); remove(myRef).catch(() => {}); } tab = t; myRef = ref(rdb, base + '/presence/' + tab); }
+        if (t !== tab) { if (myRef) { onDisconnect(myRef).cancel().catch(() => {}); remove(myRef).catch(() => {}); } tab = t; myRef = ref(rdb, base + '/presence/' + tab); armed = null; }
         await announce();
       },
       onPeers(fn, error) {
