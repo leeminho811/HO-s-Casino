@@ -1,6 +1,7 @@
 # HO’s Casino — 친구들과 하는 온라인 카지노
 
 친구들이 같은 링크로 접속해 함께 노는 웹 게임 모음: 텍사스 홀덤, 블랙잭, 룰렛, 바카라, 섯다(화투), 술래잡기(실시간).
+혼자 하는 퍼즐로 기사의 여행(나이트 투어)도 있다.
 원래 claude.ai 아티팩트(홀덤 나이트)였고, 지금은 **로그인 없이 링크만으로 들어오는 독립 웹사이트**다.
 실시간 백엔드: Firebase (익명 인증 + Realtime Database, 프로젝트 `ho-casino`), 호스팅: GitHub Pages (`main` 브랜치 루트의 index.html,
 https://leeminho811.github.io/HO-s-Casino/). 사용자용 안내는 README.md.
@@ -15,6 +16,8 @@ src/kit.js               나머지 게임이 함께 쓰는 방 시스템: 호스
 src/games/common.js      공용 도우미 (칩 단위, 카드 뽑기, 베팅 마감 판단)
 src/games/blackjack.js roulette.js baccarat.js seotda.js   게임 모듈 (로직 + render/dock). Node 에서도 로드됨
 src/games/tag.js         술래잡기: 실시간 캔버스 게임 (위치는 presence 로, 판 상태만 방 문서로 — 아래 설명)
+src/knight.js            혼자 하는 퍼즐 기사의 여행: 순수 로직(HOKnight.logic — 풀이기·힌트, Node 에서도 로드) + 화면(HOKnight.start)
+src/knight.css           기사의 여행 스타일
 src/backend-firebase.js  Firebase 어댑터 — claude.ai 런타임과 같은 {db, user, room} 모양을 돌려줌
 src/app.css, kit.css     스타일 (모바일 우선). kit.css = 시작 화면·로비·kit 게임들
 src/shell.html           HTML 뼈대 — build.py 가 CSS/JS 를 끼워 넣음
@@ -22,10 +25,11 @@ build.py                 src/ → index.html 한 파일로 합치기 (index.html
 firebase-config.js       Firebase 설정값. 합치지 않고 index.html 이 따로 불러옴
 database.rules.json      Realtime Database 보안 규칙 (사용자가 콘솔에 붙여 넣음 — 바꾸면 사용자가 다시 게시해야 함)
 firebase.json            에뮬레이터 설정 (테스트용)
-test/engine.test.js, games.test.js   규칙 테스트 (npm test)
+test/engine.test.js, games.test.js, knight.test.js   규칙 테스트 (npm test)
 test/e2e-firebase.mjs    에뮬레이터 + 브라우저 3개 홀덤 플레이 테스트
 test/e2e-games.mjs       에뮬레이터 + 시작 화면/로비/블랙잭/룰렛/바카라/섯다 테스트
 test/e2e-tag.mjs         에뮬레이터 + 술래잡기 (키보드·터치 이동, 양쪽 기기에서 터치, 봇, 얼음땡, 호스트 교체)
+test/e2e-knight.mjs      기사의 여행 브라우저 테스트 (에뮬레이터 없이: npm run test:knight)
 test/mock.js, harness.html, run.py   메모리 목(mock) 으로 하는 홀덤 시뮬레이션 (window.claude 주입)
 ```
 
@@ -42,6 +46,16 @@ node_modules/firebase 의 같은 버전 파일로 바꿔 치기하므로 package
   (보안 규칙을 안 바꾸고 게임 종류를 코드에 담기 위한 방식. 새 게임을 넣으면 main.js 의 GAMES 에 글자를 추가.)
 - 방을 옮길 때는 해시를 바꾸고 페이지를 새로 읽는다 (상태를 깨끗이 버리려고).
 - 칩은 방마다 따로 (1,000 시작, 0 이 되면 리바이). 게임 사이 공용 지갑은 없음.
+- 해시 `#knight-tour` 는 방이 아니라 혼자 하는 퍼즐 (main.js 의 SOLO 목록, 방 코드보다 먼저 검사). 서버를 안 쓰고
+  진행 상황·최고 기록은 localStorage (`ho_knight`, `ho_knight_best`, 첫 방문 규칙 안내 `ho_knight_seen`).
+
+## 기사의 여행 (src/knight.js)
+
+- 판 6×6~9×9, 칸 번호 p = 행*n + 열 (행 0 이 화면 위). 화면에는 체스식 좌표(A1 = 왼쪽 아래)로 표시.
+- `solve(n, path, {nodes, until})`: Warnsdorff 순서 DFS + 가지치기(도달 불가 칸, 막다른 칸 2개 이상, 색 교대 개수).
+  `ok`(tour) / `dead`(불가능 증명) / `unknown`(예산 초과). 홀수 판은 모서리 색 칸에서 출발해야만 가능.
+- `hint(n, path)`: 다음 칸, 또는 막다른 길이면 "N수 되돌리기" (접두어가 풀리면 더 짧은 접두어도 풀리므로 이분 탐색). 약 1.8초 안에 답함.
+- 힌트를 쓰지 않고 완주해야 최고 기록에 올라감. 게임 모양은 원래의 나이트 투어 퍼즐 (방송 이름·디자인은 따라 하지 않음).
 
 ## kit 게임 모듈 (src/games/*.js)
 
@@ -106,3 +120,4 @@ app.js 는 `{db, user, room}` 세 객체만 쓴다 (모양은 `test/mock.js`). `
 - UI 문구는 모두 한국어, 모바일 화면 기준으로 확인할 것. 사이트 제목은 “HO’s Casino”.
 - 배포는 `main` 에 푸시 (사용자가 허락함). 작업 브랜치와 `main` 을 같은 커밋으로 유지.
 - 아직 없는 것: 고스톱(요청 시 kit 모듈로 추가), 블랙잭 스플릿/인슈어런스, 섯다 구사(재경기).
+- 기사의 여행: 사용자가 데블스 플랜(데스룸)의 "기사의 여행"을 보고 요청. 판 크기 선택·되돌리기·처음부터·힌트 포함.

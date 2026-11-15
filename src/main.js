@@ -1,6 +1,7 @@
 /* Entry point: splash → lobby → room. The room code in the URL hash (#ABC123) decides the game:
  * (B 블랙잭, R 룰렛, K 바카라, S 섯다, T 술래잡기)
- * 6 characters (or any other length) = hold'em, 7 characters starting with a game letter = that game. */
+ * 6 characters (or any other length) = hold'em, 7 characters starting with a game letter = that game.
+ * #knight-tour is the solo puzzle (no room) — checked before the room code, which it can't be. */
 (function () {
   'use strict';
   const $ = s => document.querySelector(s);
@@ -31,15 +32,20 @@
     { id: 'tag', prefix: 'T', name: '술래잡기', mark: '술래', tone: 'chase', players: '2~8명 · 봇 가능',
       desc: '맵을 뛰어다니며 쫓고 쫓기는 실시간 게임. 술래에게 닿으면 내가 술래! 얼음땡 모드도 있어요.' },
   ];
+  const SOLO = [
+    { id: 'knight', hash: 'knight-tour', name: '기사의 여행', mark: '♞', tone: 'knight', players: '혼자 · 6×6~9×9',
+      desc: '체스의 나이트를 L자로만 움직여 판의 모든 칸을 딱 한 번씩 밟으면 성공! 되돌리기와 힌트가 있어요.' },
+  ];
   const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const normRoom = s => { const c = String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return /^[A-Z0-9]{4,12}$/.test(c) ? c : null; };
   const hashRoom = () => { try { return normRoom(decodeURIComponent(location.hash.slice(1))); } catch (e) { return null; } };
   const randCode = n => Array.from({ length: n }, () => CODE_CH[Math.floor(Math.random() * CODE_CH.length)]).join('');
   const gameOf = code => (code.length === 7 && GAMES.find(g => g.prefix && g.prefix === code[0])) || GAMES[0];
-  const rulesOf = g => (g.id === 'holdem' ? HOLDEM_RULES : window.HOGames[g.id].rules);
+  const rulesOf = g => (g.id === 'holdem' ? HOLDEM_RULES : g.id === 'knight' ? window.HOKnight.RULES : window.HOGames[g.id].rules);
+  const soloOf = () => { let h = ''; try { h = decodeURIComponent(location.hash.slice(1)); } catch (e) { /* ignore */ } return SOLO.find(x => x.hash === h) || null; };
   let CURRENT = null;
 
-  function show(id) { ['splash', 'lobby', 'app', 'gapp'].forEach(x => { $('#' + x).hidden = x !== id; }); }
+  function show(id) { ['splash', 'lobby', 'app', 'gapp', 'solo'].forEach(x => { $('#' + x).hidden = x !== id; }); }
   function go(code) { location.hash = code; }               // hashchange → reload into the room
   function create(g) { go(g.prefix + randCode(6)); }
   function lobby() {
@@ -79,7 +85,7 @@
     // games
     const head = el('div', 'lb-head'); head.append(el('h2', null, '게임 고르기'), el('p', null, '게임을 골라 방을 만들고, 초대 링크를 친구에게 보내요.'));
     const list = el('div', 'lb-games');
-    GAMES.forEach(g => {
+    const card = (g, label, onGo) => {
       const c = el('article', 'lb-game ' + g.tone); c.dataset.game = g.id;
       const tile = el('div', 'lb-tile'); tile.append(el('span', null, g.mark));
       const body = el('div', 'lb-body');
@@ -88,17 +94,29 @@
       const rules = el('ul', 'rules'); rules.hidden = true; rulesOf(g).forEach(t => rules.append(el('li', null, t)));
       const acts = el('div', 'lb-acts');
       const how = el('button', 'btn ghost', '게임 방법'); how.onclick = () => { rules.hidden = !rules.hidden; how.textContent = rules.hidden ? '게임 방법' : '접기'; };
-      const mk = el('button', 'btn primary', '방 만들기'); mk.onclick = () => create(g);
+      const mk = el('button', 'btn primary', label); mk.onclick = onGo;
       acts.append(how, mk);
       c.append(tile, body, rules, acts);
-      list.append(c);
-    });
-    root.append(join, head, list, el('p', 'lb-foot', '실제 돈은 걸지 않아요. 칩은 방마다 1,000개로 시작하고, 다 잃으면 리바이할 수 있어요. 술래잡기는 칩 없이 1등 횟수로 겨뤄요.'));
+      return c;
+    };
+    GAMES.forEach(g => list.append(card(g, '방 만들기', () => create(g))));
+    const soloHead = el('div', 'lb-head'); soloHead.append(el('h2', null, '혼자 하는 퍼즐'), el('p', null, '방 없이 바로 시작해요. 진행 상황과 기록은 이 기기에 저장돼요.'));
+    const soloList = el('div', 'lb-games solo');
+    SOLO.forEach(g => soloList.append(card(g, '시작하기', () => go(g.hash))));
+    root.append(join, head, list, soloHead, soloList, el('p', 'lb-foot', '실제 돈은 걸지 않아요. 칩은 방마다 1,000개로 시작하고, 다 잃으면 리바이할 수 있어요. 술래잡기는 칩 없이 1등 횟수로 겨뤄요.'));
   }
 
   function boot() {
     if (window.claude && typeof window.claude.use === 'function') { show('app'); window.startHoldem('main'); return; } // test mock
     window.addEventListener('hashchange', () => { if (hashRoom() !== CURRENT) location.reload(); });
+    const solo = soloOf();
+    if (solo) {
+      CURRENT = hashRoom();
+      sess('ho_lobby', '1');
+      document.title = solo.name + ' · HO’s Casino';
+      show('solo'); window.HOKnight.start({ onBack: lobby });
+      return;
+    }
     const code = hashRoom();
     if (!code) { if (sess('ho_lobby')) showLobby(); else showSplash(); return; }
     CURRENT = code;

@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HO’s Casino</title>
-<meta name="description" content="친구들과 링크 하나로 즐기는 카지노 — 홀덤, 블랙잭, 룰렛, 바카라, 섯다, 그리고 술래잡기. 로그인 없이 바로 입장.">
+<meta name="description" content="친구들과 링크 하나로 즐기는 카지노 — 홀덤, 블랙잭, 룰렛, 바카라, 섯다, 술래잡기, 퍼즐 기사의 여행. 로그인 없이 바로 입장.">
 <meta property="og:title" content="HO’s Casino">
-<meta property="og:description" content="친구들과 링크 하나로 즐기는 카지노 — 홀덤, 블랙잭, 룰렛, 바카라, 섯다, 그리고 술래잡기. 로그인 없이 바로 입장.">
+<meta property="og:description" content="친구들과 링크 하나로 즐기는 카지노 — 홀덤, 블랙잭, 룰렛, 바카라, 섯다, 술래잡기, 퍼즐 기사의 여행. 로그인 없이 바로 입장.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#0a100e">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Playfair+Display:wght@700;800&family=Song+Myung&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&text=%E2%99%9E&display=swap" rel="stylesheet">
 <style>
 /*CSS*/
 </style>
@@ -26,7 +27,7 @@
   <h1 class="sp-title"><span class="ho">HO’s</span><span class="ca">CASINO</span></h1>
   <p class="sp-sub">친구들과 함께하는 카드 게임 라운지</p>
   <button class="sp-start" id="startBtn">START</button>
-  <p class="sp-foot">홀덤 · 블랙잭 · 룰렛 · 바카라 · 섯다 · 술래잡기</p>
+  <p class="sp-foot">홀덤 · 블랙잭 · 룰렛 · 바카라 · 섯다 · 술래잡기<br>퍼즐 · 기사의 여행</p>
 </div>
 <div id="lobby" hidden>
   <header class="top"><div class="brand"><span class="mark" aria-hidden="true">♠</span><b>HO’s Casino</b></div><div class="meta">로비</div></header>
@@ -45,6 +46,7 @@
   <main id="gStage" class="gstage"></main>
   <section class="dock" id="gDock"></section>
 </div>
+<div id="solo" hidden></div>
 <div id="app" hidden>
   <header class="top">
     <div class="brand"><span class="mark" aria-hidden="true">♠</span><b>HO’s Casino</b></div>
@@ -83,6 +85,9 @@
 </script>
 <script>
 /*KIT*/
+</script>
+<script>
+/*SOLO*/
 </script>
 <script>
 /*MAIN*/

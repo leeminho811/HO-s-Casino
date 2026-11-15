@@ -7,11 +7,12 @@ read = lambda *names: '\n'.join((src / n).read_text(encoding='utf-8') for n in n
 GAMES = ['games/common.js', 'games/blackjack.js', 'games/roulette.js', 'games/baccarat.js', 'games/seotda.js', 'games/tag.js']
 s = (src / 'shell.html').read_text(encoding='utf-8')
 for mark, text in [
-    ('/*CSS*/', read('app.css', 'kit.css')),
+    ('/*CSS*/', read('app.css', 'kit.css', 'knight.css')),
     ('/*ENGINE*/', read('engine.js')),
     ('/*BACKEND*/', read('backend-firebase.js')),
     ('/*APP*/', read('app.js')),
     ('/*KIT*/', read(*GAMES, 'kit.js')),
+    ('/*SOLO*/', read('knight.js')),
     ('/*MAIN*/', read('main.js')),
 ]:
     assert s.count(mark) == 1, mark
